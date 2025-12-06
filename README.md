@@ -19,12 +19,24 @@ Run your Advent of Code solutions written in SQLite directly in the browser, wit
 # Install dependencies
 make install
 
-# Run tests
+# Run tests (uses port 8001)
 make test
 
-# Start development server
+# Start development server with hot-reload (port 8000)
 make serve
 # Then open http://localhost:8000
+# File changes automatically reload the page!
+```
+
+**Working on solutions and framework simultaneously:**
+```bash
+# Terminal 1 (solutions worktree):
+cd ../aoc-solutions
+make serve  # Runs on http://localhost:8000
+
+# Terminal 2 (framework worktree):
+cd ../aoc-sqlite
+make test   # Tests run on http://localhost:8001 (no conflict!)
 ```
 
 ### For Writing Solutions

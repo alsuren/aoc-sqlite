@@ -6,7 +6,8 @@
         "test": "playwright test",
         "test:ui": "playwright test --ui",
         "test:debug": "playwright test --debug",
-        "serve": "npx http-server -p 8000 -c-1"
+        "serve": "npx live-server --port=8000 --no-browser",
+        "serve:test": "npx live-server --port=8001 --no-browser"
     },
     "keywords": [
         "advent-of-code",
@@ -17,6 +18,6 @@
     "license": "MIT",
     "devDependencies": {
         "@playwright/test": "^1.40.0",
-        "http-server": "^14.1.1"
+        "live-server": "^1.2.2"
     }
 }
