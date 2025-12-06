@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advent of Code - SQLite Solutions</title>
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Advent of Code - SQLite Solutions</h1>
+      </header>
+
+      <div id="navigation">
+        <div id="year-selector"></div>
+        <div id="day-selector"></div>
+        <div id="part-selector"></div>
+      </div>
+
+      <div id="controls">
+        <button id="run-btn">Run</button>
+        <button id="stop-btn" disabled>Stop</button>
+        <button id="reset-db-btn">Reset Database</button>
+        <button id="download-db-btn">Download Database</button>
+      </div>
+
+      <div id="status">
+        <div id="progress-display">
+          <label>Progress:</label>
+          <progress id="progress-bar" max="1" value="0"></progress>
+          <span id="progress-text">0%</span>
+        </div>
+        <div id="result-display">
+          <label>Result:</label>
+          <span id="result-text">-</span>
+        </div>
+      </div>
+
+      <div id="output">
+        <h3>Output</h3>
+        <pre id="output-text"></pre>
+      </div>
+
+      <div id="errors">
+        <h3>Errors</h3>
+        <pre id="error-text"></pre>
+      </div>
+    </div>
+
+    <!-- SQLite WASM -->
+    <script src="sqlite/sqlite-wasm-3510100/jswasm/sqlite3.js"></script>
+
+    <!-- Application modules -->
+    <script type="module" src="src/sql-runner.js"></script>
+    <script type="module" src="src/db-manager.js"></script>
+    <script type="module" src="src/ui.js"></script>
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

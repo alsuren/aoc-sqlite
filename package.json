@@ -1,0 +1,22 @@
+{
+    "name": "aoc-sqlite",
+    "version": "1.0.0",
+    "description": "Advent of Code solutions in SQLite running in the browser",
+    "scripts": {
+        "test": "playwright test",
+        "test:ui": "playwright test --ui",
+        "test:debug": "playwright test --debug",
+        "serve": "npx http-server -p 8000 -c-1"
+    },
+    "keywords": [
+        "advent-of-code",
+        "sqlite",
+        "wasm"
+    ],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@playwright/test": "^1.40.0",
+        "http-server": "^14.1.1"
+    }
+}

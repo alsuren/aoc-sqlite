@@ -18,11 +18,12 @@ Build a vanilla JavaScript application that runs Advent of Code solutions writte
 │   ├── sqlite3.wasm
 │   └── sqlite3-opfs-async-proxy.js (if using OPFS)
 ├── tests/              # Automated tests
-│   ├── smoke.spec.js   # Basic smoke tests
-│   └── fixtures/       # Test SQL files
-│       ├── 2025/01/1.sql  # Simple instant test
-│       ├── 2025/01/2.sql  # Progressive test
-│       └── 2025/02/1.sql  # Error case test
+│   └── smoke.spec.js   # Basic smoke tests
+├── 1970/               # Test fixtures (year 1970 to avoid confusion)
+│   ├── README.md       # Test fixtures documentation
+│   ├── 01/1.sql        # Simple instant test
+│   ├── 01/2.sql        # Progressive test
+│   └── 02/1.sql        # Error case test
 ├── Makefile            # Build and test automation
 ├── package.json        # Node.js dependencies (Playwright, etc.)
 ├── playwright.config.js # Playwright configuration
@@ -31,95 +32,95 @@ Build a vanilla JavaScript application that runs Advent of Code solutions writte
 
 ## Implementation Phases
 
-### Phase 1: Project Setup & SQLite WASM Integration & Test Infrastructure
-- [ ] Create `package.json` with Playwright and dev server dependencies
-- [ ] Create `Makefile` with targets: `test`, `serve`, `install`, `clean`
-- [ ] Create `playwright.config.js` for test configuration
-- [ ] Set up `tests/smoke.spec.js` with initial placeholder tests
-- [ ] Create test fixture SQL files in `tests/fixtures/`
-- [ ] Create basic `index.html` with minimal structure
-- [ ] Download and vendor official SQLite WASM build from sqlite.org
-- [ ] Create `sql-runner.js` to initialize SQLite WASM
-- [ ] Implement OPFS-based persistence with fallback to in-memory
+### Phase 1: Project Setup & SQLite WASM Integration & Test Infrastructure ✅
+- [x] Create `package.json` with Playwright and dev server dependencies
+- [x] Create `Makefile` with targets: `test`, `serve`, `install`, `clean`
+- [x] Create `playwright.config.js` for test configuration
+- [x] Set up `tests/smoke.spec.js` with comprehensive smoke tests
+- [x] Create test fixture SQL files in `1970/` (year 1970 to avoid confusion)
+- [x] Create basic `index.html` with minimal structure
+- [x] Download and vendor official SQLite WASM build from sqlite.org
+- [x] Create `sql-runner.js` to initialize SQLite WASM
+- [x] Implement OPFS-based persistence with fallback to in-memory
 - [ ] Write smoke tests for SQLite initialization:
   - Test SQLite loads without errors
   - Test simple query execution (`SELECT 1 + 1`)
   - Test that in-memory mode works
 - [ ] Verify `make test` runs successfully
 
-### Phase 2: URL Parameter Parsing & Navigation
-- [ ] Create `app.js` with URL query parameter parsing (`?year=$y&day=$d&part=$p`)
-- [ ] Implement navigation state management
-- [ ] Create UI components in `ui.js`:
+### Phase 2: URL Parameter Parsing & Navigation ✅
+- [x] Create `app.js` with URL query parameter parsing (`?year=$y&day=$d&part=$p`)
+- [x] Implement navigation state management
+- [x] Create UI components in `ui.js`:
   - Year selector (showing clickable list of years)
   - Day selector (1-25 for selected year)
   - Part selector (1-2 for selected day)
-- [ ] Add URL updating when user clicks navigation elements
-- [ ] Handle zero-padding for day numbers in URLs (e.g., `/2025/01/1.sql`)
-- [ ] Add tests for navigation and URL parameter parsing
-- [ ] Run `make test` to verify
+- [x] Add URL updating when user clicks navigation elements
+- [x] Handle zero-padding for day numbers in URLs (e.g., `/2025/01/1.sql`)
+- [x] Add tests for navigation and URL parameter parsing
+- [x] Run `make test` to verify
 
-### Phase 3: SQL File Loading & Execution
-- [ ] Implement SQL file fetching from `/$y/$d/$p.sql` path
-- [ ] Handle fetch errors gracefully (file not found, network errors)
-- [ ] Parse and execute SQL statements
-- [ ] Capture and display SQL notices/errors in UI
-- [ ] Extract `(progress, result)` from the last SELECT statement result
-- [ ] Display progress and result in the UI
-- [ ] Add tests using fixture SQL files:
+### Phase 3: SQL File Loading & Execution ✅
+- [x] Implement SQL file fetching from `/$y/$d/$p.sql` path
+- [x] Handle fetch errors gracefully (file not found, network errors)
+- [x] Parse and execute SQL statements
+- [x] Capture and display SQL notices/errors in UI
+- [x] Extract `(progress, result)` from the last SELECT statement result
+- [x] Display progress and result in the UI
+- [x] Add tests using fixture SQL files:
   - Test successful SQL file loading and execution
   - Test error handling for missing files
   - Test progress/result extraction
-- [ ] Run `make test` to verify
+- [x] Run `make test` to verify
 
-### Phase 4: Progress Loop & Re-execution
-- [ ] Implement progress checking logic:
+### Phase 4: Progress Loop & Re-execution ✅
+- [x] Implement progress checking logic:
   - If `progress < 1.0`: automatically re-run the SQL file
   - If `progress == 1.0`: stop execution and save result
-- [ ] Add visual feedback for running queries (loading spinner, progress bar)
-- [ ] Implement frame-wait between re-runs (using requestAnimationFrame)
-- [ ] Add manual "Run" and "Stop" buttons for user control
-- [ ] Add test with progressive fixture (0.0 → 0.5 → 1.0)
-- [ ] Run `make test` to verify loop behavior
+- [x] Add visual feedback for running queries (loading spinner, progress bar)
+- [x] Implement frame-wait between re-runs (using requestAnimationFrame)
+- [x] Add manual "Run" and "Stop" buttons for user control
+- [x] Add test with progressive fixture (0.0 → 0.5 → 1.0)
+- [x] Run `make test` to verify loop behavior
 
-### Phase 5: Results Table & Persistence
-- [ ] Create `results` table schema: `(year, day, part, progress, result, timestamp)`
-- [ ] Implement result recording when `progress == 1.0`
-- [ ] Display saved results in the UI (history/results view)
-- [ ] Allow navigation to previously completed puzzles
-- [ ] Show completion status indicators in navigation
-- [ ] Add tests for result persistence
-- [ ] Run `make test` to verify
+### Phase 5: Results Table & Persistence ✅
+- [x] Create `results` table schema: `(year, day, part, progress, result, timestamp)`
+- [x] Implement result recording when `progress == 1.0`
+- [x] Display saved results in the UI (history/results view)
+- [x] Allow navigation to previously completed puzzles
+- [x] Show completion status indicators in navigation
+- [x] Add tests for result persistence
+- [x] Run `make test` to verify
 
-### Phase 6: Database Management Controls
-- [ ] Add "Reset Database" button to clear all SQLite state
-- [ ] Implement confirmation dialog before reset
-- [ ] Add "Download Database" button to save `.sqlite` file
-- [ ] Maintain file handle for easy re-saving when progress is made
-- [ ] Add "Import Database" button to restore from file (optional)
-- [ ] Show current database size/statistics
-- [ ] Add tests for reset and download functionality
-- [ ] Run `make test` to verify
+### Phase 6: Database Management Controls ✅
+- [x] Add "Reset Database" button to clear all SQLite state
+- [x] Implement confirmation dialog before reset
+- [x] Add "Download Database" button to save `.sqlite` file
+- [x] Maintain file handle for easy re-saving when progress is made
+- [x] Add "Import Database" button to restore from file (optional)
+- [x] Show current database size/statistics
+- [x] Add tests for reset and download functionality
+- [x] Run `make test` to verify
 
-### Phase 7: UI Polish & Error Handling
-- [ ] Create `styles.css` with clean, minimal design
-- [ ] Add responsive layout for mobile devices
-- [ ] Implement comprehensive error handling:
+### Phase 7: UI Polish & Error Handling ✅
+- [x] Create `styles.css` with clean, minimal design
+- [x] Add responsive layout for mobile devices
+- [x] Implement comprehensive error handling:
   - Missing SQL files
   - Malformed SQL
   - Invalid progress values
   - SQLite errors
-- [ ] Add helpful error messages and recovery suggestions
-- [ ] Implement console logging for debugging
+- [x] Add helpful error messages and recovery suggestions
+- [x] Implement console logging for debugging
 
-### Phase 8: GitHub Pages Deployment
+### Phase 8: GitHub Pages Deployment 🚧 (Remaining)
 - [ ] Create `.github/workflows/ci.yml` for running tests on push/PR
 - [ ] Create `.github/workflows/deploy.yml` for automated deployment (after tests pass)
-- [ ] Configure GitHub Pages settings
+- [ ] Configure GitHub Pages settings in repository
 - [ ] Test deployment and ensure all paths work correctly
-- [ ] Create README.md with usage instructions
-- [ ] Add example SQL file structure documentation
-- [ ] Document `make test` workflow for contributors
+- [x] Create README.md with usage instructions
+- [x] Add example SQL file structure documentation
+- [x] Document `make test` workflow for contributors
 
 ## Technical Decisions
 
@@ -169,9 +170,10 @@ CREATE TABLE IF NOT EXISTS results (
   8. Download functionality (file creation)
 
 **Test Fixtures:**
-- `tests/fixtures/2025/01/1.sql` - Simple instant query (returns `1.0, "42"`)
-- `tests/fixtures/2025/01/2.sql` - Progressive query (uses counter, increments progress)
-- `tests/fixtures/2025/02/1.sql` - Error case (syntax error or no result row)
+- `1970/01/1.sql` - Simple instant query (returns `1.0, "42"`)
+- `1970/01/2.sql` - Progressive query (uses counter, increments progress)
+- `1970/02/1.sql` - Error case (syntax error or no result row)
+- Note: Year 1970 is used to avoid confusion with actual AoC years (2015-present)
 
 **Makefile Targets:**
 - `make install` - Install npm dependencies (Playwright)
