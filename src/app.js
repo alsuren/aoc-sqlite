@@ -143,6 +143,12 @@ async function init() {
 
     const params = parseURLParams();
 
+    // Auto-redirect to part 1 if year and day are specified but part is missing
+    if (params.year && params.day && !params.part) {
+        window.location.href = `?year=${params.year}&day=${params.day}&part=1`;
+        return;
+    }
+
     // Always render navigation to allow quick jumping between puzzles
     ui.renderYearSelector();
     if (params.year) {
