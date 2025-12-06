@@ -156,6 +156,7 @@ async function init() {
     }
     if (params.year && params.day) {
         ui.renderPartSelector(params.year, params.day);
+        ui.updatePuzzleLink(params.year, params.day);
     }
 
     // Set up control buttons

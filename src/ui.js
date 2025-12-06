@@ -135,6 +135,26 @@ export function markCompletedPuzzles() {
     });
 }
 
+/**
+ * Update the Advent of Code puzzle link
+ */
+export function updatePuzzleLink(year, day) {
+    const container = document.getElementById('puzzle-link-container');
+    if (!container) return;
+
+    if (year && day) {
+        // AoC URLs are like: https://adventofcode.com/2023/day/1
+        const aocUrl = `https://adventofcode.com/${year}/day/${day}`;
+        container.innerHTML = `
+            <a href="${aocUrl}" target="_blank" rel="noopener noreferrer" class="puzzle-link">
+                📖 View Puzzle on adventofcode.com
+            </a>
+        `;
+    } else {
+        container.innerHTML = '';
+    }
+}
+
 // Make functions available globally for testing
 if (typeof window !== 'undefined') {
     window.ui = {
@@ -147,6 +167,7 @@ if (typeof window !== 'undefined') {
         renderYearSelector,
         renderDaySelector,
         renderPartSelector,
-        markCompletedPuzzles
+        markCompletedPuzzles,
+        updatePuzzleLink
     };
 }
