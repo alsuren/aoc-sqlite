@@ -1,2 +1,2 @@
--- Error case test - syntax error
-SELECT this is not valid SQL;
+-- Second test case with different result
+SELECT 1.0 as progress, 99 as result;
