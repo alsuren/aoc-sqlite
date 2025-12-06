@@ -4,11 +4,6 @@ This directory contains test fixtures for the automated test suite.
 
 Year 1970 is used to avoid confusion with actual Advent of Code years (2015-present).
 
-## Files
-
-- `01/1.sql` - Simple instant completion test (returns progress=1.0 immediately)
-- `01/2.sql` - Progressive execution test (uses a counter, completes after 3 runs)
-- `02/1.sql` - Error handling test (contains a syntax error)
 
 ## Purpose
 

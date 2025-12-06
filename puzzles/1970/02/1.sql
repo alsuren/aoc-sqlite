@@ -1,7 +1,4 @@
 -- Test case that reads input and concatenates with a constant
-CREATE TABLE input_data(line TEXT);
-.mode list
-.import 1970/02/1-test-input.txt input_data
 
 SELECT 1.0 as progress, 
        (SELECT GROUP_CONCAT(line || ' world', '') FROM input_data) as result;

@@ -4,3 +4,4 @@ playwright-report/
 test-results/
 sqlite/
 .cache/
+*-real-output.txt

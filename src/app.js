@@ -24,7 +24,7 @@ function parseURLParams() {
 async function loadAndExecuteSQL(year, day, part) {
     // Zero-pad day if needed
     const dayStr = day.toString().padStart(2, '0');
-    const url = `/${year}/${dayStr}/${part}.sql`;
+    const url = `/puzzles/${year}/${dayStr}/${part}.sql`;
 
     ui.appendOutput(`Loading ${url}...`);
 

@@ -1,4 +1,4 @@
-.PHONY: install test test-ui serve clean check-solutions
+.PHONY: install test test-ui serve clean check-solutions solve-all
 
 install:
 	npm install
@@ -25,19 +25,19 @@ clean:
 	rm -f package-lock.json
 
 # Pattern rule to test SQL solutions against expected output
-# Usage: make .cache/1970/01/1.stamp
+# Usage: make .cache/puzzles/1970/01/1.stamp
 # The .stamp file acts as a witness that the test passed
-.PRECIOUS: .cache/%.stamp
-.cache/%.stamp: %.sql %-test-input.txt %-test-output.txt
+.PRECIOUS: .cache/puzzles/%.stamp
+.cache/puzzles/%.stamp: puzzles/%.sql puzzles/%-test-input.txt puzzles/%-test-output.txt
 	@mkdir -p $(dir $@)
-	@echo "Testing $*.sql..."
-	@EXPECTED=$$(cat $*-test-output.txt); \
-	ACTUAL=$$(sqlite3 :memory: < $*.sql | tail -n 1 | cut -d'|' -f2); \
+	@echo "Testing puzzles/$*.sql..."
+	@EXPECTED=$$(cat puzzles/$*-test-output.txt); \
+	ACTUAL=$$(node src/node-test-runner.js puzzles/$*.sql puzzles/$*-test-input.txt 2>&1); \
 	if [ "$$ACTUAL" = "$$EXPECTED" ]; then \
-		echo "✓ Test passed: $*.sql"; \
+		echo "✓ Test passed: puzzles/$*.sql"; \
 		touch $@; \
 	else \
-		echo "✗ Test failed: $*.sql"; \
+		echo "✗ Test failed: puzzles/$*.sql"; \
 		echo "  Expected: $$EXPECTED"; \
 		echo "  Actual:   $$ACTUAL"; \
 		exit 1; \
@@ -45,4 +45,18 @@ clean:
 
 # Helper target to run all SQL solution tests
 check-solutions:
-	@find . -name '*-test-output.txt' | sed 's|\(.*\)/\(.*\)-test-output.txt|.cache/\1/\2.stamp|' | xargs make
+	@find puzzles -name '*-test-output.txt' | sed 's|puzzles/\(.*\)-test-output.txt|.cache/puzzles/\1.stamp|' | xargs make
+
+# Pattern rule to run SQL with real input and produce output
+# Usage: make puzzles/1970/01/1-real-output.txt
+# Depends on test passing first
+.PRECIOUS: puzzles/%-real-output.txt
+puzzles/%-real-output.txt: puzzles/%.sql puzzles/%-real-input.txt .cache/puzzles/%.stamp
+	@echo "Running puzzles/$*.sql with real input..."
+	@RESULT=$$(node src/node-test-runner.js puzzles/$*.sql puzzles/$*-real-input.txt); \
+	echo "$$RESULT" | tee $@
+
+# Helper target to run all SQL solutions with real input
+# Usage: make solve-all
+solve-all:
+	@find puzzles -name '*-real-input.txt' | sed 's|-real-input\.txt|-real-output.txt|' | sort | xargs make

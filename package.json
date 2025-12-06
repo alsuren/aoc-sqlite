@@ -1,6 +1,7 @@
 {
     "name": "aoc-sqlite",
     "version": "1.0.0",
+    "type": "module",
     "description": "Advent of Code solutions in SQLite running in the browser",
     "scripts": {
         "test": "playwright test",
@@ -19,5 +20,8 @@
     "devDependencies": {
         "@playwright/test": "^1.40.0",
         "live-server": "^1.2.2"
+    },
+    "dependencies": {
+        "better-sqlite3": "^12.5.0"
     }
 }
