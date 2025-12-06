@@ -60,4 +60,4 @@ puzzles/%-real-output.txt: puzzles/%.sql puzzles/%-real-input.txt .cache/puzzles
 # Helper target to run all SQL solutions with real input
 # Usage: make solve-all
 solve-all:
-	@find puzzles -name '*-real-input.txt' | sed 's|-real-input\.txt|-real-output.txt|' | sort | xargs make
+	@find puzzles -name '*.sql' | sed 's|\.sql|-real-output.txt|' | sort | xargs make
