@@ -13,32 +13,6 @@ Run your Advent of Code solutions written in SQLite directly in the browser, wit
 
 ## Getting Started
 
-### For Development
-
-```bash
-# Install dependencies
-make install
-
-# Run tests (uses port 8001)
-make test
-
-# Start development server with hot-reload (port 8000)
-make serve
-# Then open http://localhost:8000
-# File changes automatically reload the page!
-```
-
-**Working on solutions and framework simultaneously:**
-```bash
-# Terminal 1 (solutions worktree):
-cd ../aoc-solutions
-make serve  # Runs on http://localhost:8000
-
-# Terminal 2 (framework worktree):
-cd ../aoc-sqlite
-make test   # Tests run on http://localhost:8001 (no conflict!)
-```
-
 ### For Writing Solutions
 
 **Recommended workflow:**
@@ -46,7 +20,7 @@ make test   # Tests run on http://localhost:8001 (no conflict!)
 1. **Fork this repository** to your own GitHub account
 2. **Create a git worktree** for your solutions branch:
    ```bash
-   git worktree add ../aoc-solutions solutions
+   git worktree add ../aoc-solutions
    cd ../aoc-solutions
    ```
 3. **Work on your solutions without AI assistance** - While the scaffolding in this repo is almost entirely vibe-coded, Advent of Code is meant to be solved by you! The satisfaction of solving these puzzles yourself is the whole point.
@@ -99,6 +73,32 @@ Or use the clickable interface to select year, day, and part.
 - **Stop** - Stop execution (if running)
 - **Reset Database** - Clear all data and start fresh
 - **Download Database** - Save your database file (with all results)
+
+## Development
+
+```bash
+# Install dependencies
+make install
+
+# Run tests (uses port 8001)
+make test
+
+# Start development server with hot-reload (port 8000)
+make serve
+# Then open http://localhost:8000
+# File changes automatically reload the page!
+```
+
+**Working on solutions and framework simultaneously:**
+```bash
+# Terminal 1 (solutions worktree):
+cd ../aoc-solutions
+make serve  # Runs on http://localhost:8000
+
+# Terminal 2 (framework worktree):
+cd ../aoc-sqlite
+make test   # Tests run on http://localhost:8001 (no conflict!)
+```
 
 ## Testing
 

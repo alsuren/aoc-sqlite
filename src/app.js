@@ -181,10 +181,10 @@ async function init() {
     // If all parameters are present, set up run button and auto-start
     if (params.year && params.day && params.part) {
         ui.appendOutput(`Ready to run: Year ${params.year}, Day ${params.day}, Part ${params.part}`);
-        
+
         // Set up run button handler
         document.getElementById('run-btn').onclick = () => runPuzzle(params.year, params.day, params.part);
-        
+
         // Auto-run the puzzle
         runPuzzle(params.year, params.day, params.part);
     }
