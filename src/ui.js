@@ -74,7 +74,7 @@ export function renderYearSelector(years = [2015, 2016, 2017, 2018, 2019, 2020, 
     container.innerHTML = '<h3>Select Year:</h3>';
     years.forEach(year => {
         const link = document.createElement('a');
-        link.href = `?year=${year}`;
+        link.href = `?year=${year}&day=1&part=1`;
         link.className = 'year-link';
         link.textContent = year;
         container.appendChild(link);

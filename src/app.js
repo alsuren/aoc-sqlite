@@ -143,19 +143,13 @@ async function init() {
 
     const params = parseURLParams();
 
-    // Render navigation
-    if (!params.year) {
-        ui.renderYearSelector();
-    } else if (!params.day) {
+    // Always render navigation to allow quick jumping between puzzles
+    ui.renderYearSelector();
+    if (params.year) {
         ui.renderDaySelector(params.year);
-    } else if (!params.part) {
+    }
+    if (params.year && params.day) {
         ui.renderPartSelector(params.year, params.day);
-    } else {
-        // All parameters provided - ready to run
-        ui.appendOutput(`Ready to run: Year ${params.year}, Day ${params.day}, Part ${params.part}`);
-
-        // Set up button handlers
-        document.getElementById('run-btn').onclick = () => runPuzzle(params.year, params.day, params.part);
     }
 
     // Set up control buttons
@@ -177,6 +171,17 @@ async function init() {
     };
 
     ui.markCompletedPuzzles();
+
+    // If all parameters are present, set up run button and auto-start
+    if (params.year && params.day && params.part) {
+        ui.appendOutput(`Ready to run: Year ${params.year}, Day ${params.day}, Part ${params.part}`);
+        
+        // Set up run button handler
+        document.getElementById('run-btn').onclick = () => runPuzzle(params.year, params.day, params.part);
+        
+        // Auto-run the puzzle
+        runPuzzle(params.year, params.day, params.part);
+    }
 }
 
 // Initialize on page load

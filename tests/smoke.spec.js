@@ -52,7 +52,7 @@ test.describe('SQLite Initialization', () => {
 });
 
 test.describe('Navigation', () => {
-    test('renders year selector by default', async ({ page }) => {
+    test('always renders year selector', async ({ page }) => {
         await page.goto('/');
 
         const yearSelector = page.locator('#year-selector');
@@ -62,9 +62,14 @@ test.describe('Navigation', () => {
         await expect(page.locator('.year-link').first()).toBeVisible();
     });
 
-    test('renders day selector when year is selected', async ({ page }) => {
-        await page.goto('/?year=1970');
+    test('renders day selector when year is in URL', async ({ page }) => {
+        await page.goto('/?year=1970&day=1&part=1');
 
+        // Year selector should still be visible
+        const yearSelector = page.locator('#year-selector');
+        await expect(yearSelector).toContainText('Select Year');
+
+        // Day selector should be visible
         const daySelector = page.locator('#day-selector');
         await expect(daySelector).toContainText('Select Day (1970)');
 
@@ -72,8 +77,12 @@ test.describe('Navigation', () => {
         await expect(page.locator('.day-link').first()).toBeVisible();
     });
 
-    test('renders part selector when year and day are selected', async ({ page }) => {
-        await page.goto('/?year=1970&day=1');
+    test('renders part selector when year and day are in URL', async ({ page }) => {
+        await page.goto('/?year=1970&day=1&part=1');
+
+        // All selectors should be visible
+        await expect(page.locator('#year-selector')).toContainText('Select Year');
+        await expect(page.locator('#day-selector')).toContainText('Select Day (1970)');
 
         const partSelector = page.locator('#part-selector');
         await expect(partSelector).toContainText('Select Part (1970-1)');
@@ -84,20 +93,14 @@ test.describe('Navigation', () => {
 });
 
 test.describe('SQL File Execution', () => {
-    test('can load and execute test fixture - instant completion', async ({ page }) => {
+    test('auto-runs and completes test fixture - instant completion', async ({ page }) => {
         await page.goto('/?year=1970&day=1&part=1');
 
-        // Wait for SQLite to be ready
-        await page.waitForFunction(() => window.sqlRunner !== undefined, { timeout: 10000 });
-
-        // Click run button
-        await page.click('#run-btn');
-
-        // Wait for completion
+        // Wait for auto-run to complete
         await page.waitForFunction(() => {
             const progressText = document.getElementById('progress-text');
             return progressText && progressText.textContent.includes('100%');
-        }, { timeout: 5000 });
+        }, { timeout: 10000 });
 
         // Check result
         const resultText = await page.locator('#result-text').textContent();
@@ -107,16 +110,10 @@ test.describe('SQL File Execution', () => {
         await expect(page.locator('#output-text')).toContainText('Completed');
     });
 
-    test('handles progressive execution', async ({ page }) => {
+    test('auto-runs and handles progressive execution', async ({ page }) => {
         await page.goto('/?year=1970&day=1&part=2');
 
-        // Wait for SQLite to be ready
-        await page.waitForFunction(() => window.sqlRunner !== undefined, { timeout: 10000 });
-
-        // Click run button
-        await page.click('#run-btn');
-
-        // Wait for completion (should take 3 iterations)
+        // Wait for auto-run to complete (should take 3 iterations)
         await page.waitForFunction(() => {
             const progressText = document.getElementById('progress-text');
             return progressText && progressText.textContent.includes('100%');
@@ -127,17 +124,11 @@ test.describe('SQL File Execution', () => {
         expect(resultText).toBe('completed');
     });
 
-    test('handles SQL errors gracefully', async ({ page }) => {
+    test('auto-runs and handles SQL errors gracefully', async ({ page }) => {
         await page.goto('/?year=1970&day=2&part=1');
 
-        // Wait for SQLite to be ready
-        await page.waitForFunction(() => window.sqlRunner !== undefined, { timeout: 10000 });
-
-        // Click run button
-        await page.click('#run-btn');
-
-        // Wait a bit for error to appear
-        await page.waitForTimeout(1000);
+        // Wait for auto-run to encounter error
+        await page.waitForTimeout(2000);
 
         // Check that error is displayed
         const errorText = await page.locator('#error-text').textContent();
@@ -145,17 +136,11 @@ test.describe('SQL File Execution', () => {
         expect(errorText.length).toBeGreaterThan(0);
     });
 
-    test('handles missing SQL file', async ({ page }) => {
+    test('auto-runs and handles missing SQL file', async ({ page }) => {
         await page.goto('/?year=9999&day=99&part=9');
 
-        // Wait for SQLite to be ready
-        await page.waitForFunction(() => window.sqlRunner !== undefined, { timeout: 10000 });
-
-        // Click run button
-        await page.click('#run-btn');
-
-        // Wait for error
-        await page.waitForTimeout(1000);
+        // Wait for auto-run to fail
+        await page.waitForTimeout(2000);
 
         // Check that error is displayed
         const errorText = await page.locator('#error-text').textContent();
