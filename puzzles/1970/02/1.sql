@@ -1,4 +1,5 @@
 -- Test case that reads input and concatenates with a constant
-
+INSERT INTO output (progress, result)
 SELECT 1.0 as progress, 
-       (SELECT GROUP_CONCAT(line || ' world', '') FROM input_data) as result;
+       GROUP_CONCAT(line || ' world', '') as result
+FROM input_data;

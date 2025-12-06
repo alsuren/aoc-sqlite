@@ -36,6 +36,9 @@ try {
         }
     }
 
+    // Create output table where solutions must insert their results
+    db.exec('CREATE TABLE IF NOT EXISTS output (progress REAL, result TEXT)');
+
     // Execute SQL repeatedly until progress reaches 1.0
     let maxIterations = 100; // Safety limit
     let iteration = 0;
@@ -45,31 +48,17 @@ try {
     while (progress < 1.0 && iteration < maxIterations) {
         iteration++;
 
-        // Execute the SQL (may have multiple statements)
+        // Clear previous output
+        db.exec('DELETE FROM output');
+
+        // Execute all SQL statements in the file
         db.exec(sql);
 
-        // Parse SQL to find the last SELECT statement
-        const statements = sql.split(';').map(s => s.trim()).filter(s => s.length > 0);
-        const lastSelect = statements[statements.length - 1];
-
-        // Remove leading comments from the statement
-        const lines = lastSelect.split('\n');
-        const codeLines = lines.filter(line => {
-            const trimmed = line.trim();
-            return trimmed.length > 0 && !trimmed.startsWith('--');
-        });
-        const cleanedSelect = codeLines.join('\n');
-
-        if (!cleanedSelect || !cleanedSelect.trim().toUpperCase().startsWith('SELECT')) {
-            console.error('Error: Last statement is not a SELECT');
-            console.error('Last statement:', cleanedSelect);
-            process.exit(1);
-        }
-
-        const row = db.prepare(cleanedSelect).get();
+        // Read the result from the output table
+        const row = db.prepare('SELECT progress, result FROM output').get();
 
         if (!row || typeof row.progress === 'undefined') {
-            console.error('Error: SQL did not return progress and result columns');
+            console.error('Error: SQL did not insert into output table with progress and result columns');
             process.exit(1);
         }
 

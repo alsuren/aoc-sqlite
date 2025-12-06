@@ -45,6 +45,7 @@ clean:
 
 # Helper target to run all SQL solution tests
 check-solutions:
+	@rm -rf .cache
 	@find puzzles -name '*-test-output.txt' | sed 's|puzzles/\(.*\)-test-output.txt|.cache/puzzles/\1.stamp|' | xargs make
 
 # Pattern rule to run SQL with real input and produce output
