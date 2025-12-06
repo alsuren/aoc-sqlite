@@ -50,7 +50,7 @@ export async function initSQLite() {
 }
 
 /**
- * Create the results table
+ * Create the required tables
  */
 function initResultsTable() {
     if (!db) {
@@ -66,14 +66,21 @@ function initResultsTable() {
             result TEXT,
             timestamp INTEGER NOT NULL,
             PRIMARY KEY (year, day, part)
-        )
+        );
+        
+        CREATE TABLE IF NOT EXISTS input_data (line TEXT);
+        
+        CREATE TABLE IF NOT EXISTS output (progress REAL, result TEXT);
+        
+        CREATE TABLE IF NOT EXISTS progress_counter (run_count INTEGER);
+        INSERT INTO progress_counter SELECT 0 WHERE NOT EXISTS (SELECT 1 FROM progress_counter);
     `);
 }
 
 /**
- * Execute SQL and return results
- * @param {string} sql - SQL statements to execute
- * @returns {Promise<{success: boolean, rows?: Array, error?: string, lastRow?: Object}>}
+ * Execute SQL and return results from output table
+ * @param {string} sql - SQL statements to execute (should INSERT INTO output for AoC solutions)
+ * @returns {Promise<{success: boolean, error?: string, lastRow?: Object, rows?: Array}>}
  */
 export async function executeSQL(sql) {
     if (!db) {
@@ -81,23 +88,46 @@ export async function executeSQL(sql) {
     }
 
     try {
-        let lastRow = null;
-        const rows = [];
+        // Clear previous output
+        db.exec('DELETE FROM output');
 
-        // Execute the SQL
+        // Execute the SQL statements
+        const directRows = [];
         db.exec({
             sql: sql,
             rowMode: 'object',
-            resultRows: rows,
-            callback: (row) => {
-                lastRow = row;
-            }
+            resultRows: directRows
         });
+
+        // Check if we got direct results (for metadata queries like sqlite_master)
+        if (directRows.length > 0) {
+            return {
+                success: true,
+                rows: directRows,
+                lastRow: directRows[directRows.length - 1]
+            };
+        }
+
+        // Otherwise read from the output table (for AoC solutions)
+        const outputRows = [];
+        db.exec({
+            sql: 'SELECT progress, result FROM output',
+            rowMode: 'object',
+            resultRows: outputRows
+        });
+
+        const lastRow = outputRows.length > 0 ? outputRows[0] : null;
+
+        if (!lastRow || typeof lastRow.progress === 'undefined') {
+            return {
+                success: false,
+                error: 'SQL did not insert into output table with progress and result columns'
+            };
+        }
 
         return {
             success: true,
-            rows: rows,
-            lastRow: lastRow || (rows.length > 0 ? rows[rows.length - 1] : null)
+            lastRow: lastRow
         };
     } catch (error) {
         return {

@@ -1,5 +1,5 @@
 // Main application logic
-import { initSQLite, executeSQL, saveResult } from './sql-runner.js';
+import { initSQLite, executeSQL, saveResult, getDB } from './sql-runner.js';
 import { handleResetDatabase, handleDownloadDatabase } from './db-manager.js';
 import * as ui from './ui.js';
 
@@ -24,17 +24,36 @@ function parseURLParams() {
 async function loadAndExecuteSQL(year, day, part) {
     // Zero-pad day if needed
     const dayStr = day.toString().padStart(2, '0');
-    const url = `/puzzles/${year}/${dayStr}/${part}.sql`;
+    const sqlUrl = `/puzzles/${year}/${dayStr}/${part}.sql`;
+    const inputUrl = `/puzzles/${year}/${dayStr}/${part}-test-input.txt`;
 
-    ui.appendOutput(`Loading ${url}...`);
+    ui.appendOutput(`Loading ${sqlUrl}...`);
 
     try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to load ${url}: ${response.statusText}`);
+        // Load SQL file
+        const sqlResponse = await fetch(sqlUrl);
+        if (!sqlResponse.ok) {
+            throw new Error(`Failed to load ${sqlUrl}: ${sqlResponse.statusText}`);
+        }
+        const sql = await sqlResponse.text();
+
+        // Load input file and populate input_data table
+        ui.appendOutput(`Loading ${inputUrl}...`);
+        const inputResponse = await fetch(inputUrl);
+        if (inputResponse.ok) {
+            const inputText = await inputResponse.text();
+            const lines = inputText.split('\n').filter(line => line.length > 0);
+            
+            // Clear and populate input_data table
+            const db = getDB();
+            db.exec('DELETE FROM input_data');
+            for (const line of lines) {
+                // Escape single quotes in the line
+                const escapedLine = line.replace(/'/g, "''");
+                db.exec(`INSERT INTO input_data (line) VALUES ('${escapedLine}')`);
+            }
         }
 
-        const sql = await response.text();
         ui.appendOutput(`Executing SQL...`);
 
         const result = await executeSQL(sql);

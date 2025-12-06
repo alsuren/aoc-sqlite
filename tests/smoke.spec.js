@@ -23,13 +23,13 @@ test.describe('SQLite Initialization', () => {
         // Wait for SQLite to be ready
         await page.waitForFunction(() => window.sqlRunner !== undefined, { timeout: 10000 });
 
-        // Execute a simple query
+        // Execute a simple query (must insert into output table)
         const result = await page.evaluate(async () => {
-            return await window.sqlRunner.executeSQL('SELECT 1 + 1 as result');
+            return await window.sqlRunner.executeSQL('INSERT INTO output (progress, result) VALUES (1.0, 1 + 1)');
         });
 
         expect(result.success).toBe(true);
-        expect(result.lastRow.result).toBe(2);
+        expect(result.lastRow.result).toBe('2'); // result is TEXT column
     });
 
     test('results table is created', async ({ page }) => {
@@ -124,16 +124,19 @@ test.describe('SQL File Execution', () => {
         expect(resultText).toBe('completed');
     });
 
-    test('auto-runs and handles SQL errors gracefully', async ({ page }) => {
+    test('auto-runs day 2 part 1 (input concatenation test)', async ({ page }) => {
         await page.goto('/?year=1970&day=2&part=1');
 
-        // Wait for auto-run to encounter error
-        await page.waitForTimeout(2000);
+        // Wait for auto-run to complete
+        await page.waitForFunction(() => {
+            const progressText = document.getElementById('progress-text');
+            return progressText && progressText.textContent.includes('100%');
+        }, { timeout: 5000 });
 
-        // Check that error is displayed
-        const errorText = await page.locator('#error-text').textContent();
-        expect(errorText).toBeTruthy();
-        expect(errorText.length).toBeGreaterThan(0);
+        // Check that result is displayed
+        const resultText = await page.locator('#result-text').textContent();
+        expect(resultText).toBeTruthy();
+        expect(resultText).toContain('hello world'); // Concatenates test input with ' world'
     });
 
     test('auto-runs and handles missing SQL file', async ({ page }) => {
