@@ -55,8 +55,14 @@ try {
         db.exec(sql);
 
         // Read the result from the output table
-        const row = db.prepare('SELECT progress, result FROM output').get();
-
+        const rows = db.prepare('SELECT progress, result FROM output').all();
+        if (rows.length > 1) {
+            // FIXME: think of a better protocol for debugging things.
+            console.error('Error: SQL inserted too many rows');
+            console.error(JSON.stringify(rows, null, 2))
+            process.exit(1);
+        }
+        const row = rows[0]
         if (!row || typeof row.progress === 'undefined') {
             console.error('Error: SQL did not insert into output table with progress and result columns');
             process.exit(1);
