@@ -40,7 +40,6 @@ vals (val, range_end) AS (
 str_vals as (
     select val, cast(val as text) as str_val
     from vals
-    where length(str_val) % 2 == 0
 ),
 split_vals as (
     select
@@ -52,20 +51,55 @@ split_vals as (
     from str_vals
 ),
 filtered_vals as (
-    select val from str_vals
-    where 
+    select val, str_val,
     -- there doesn't seem to be a repeat(string, reps), so https://stackoverflow.com/questions/11568496/how-to-emulate-repeat-in-sqlite
-        str_val = replace(printf('%.' || length(str_val) || 'c', '/'), '/', substring(str_val, 0, 1))
+    -- we use max(..., 2) to make sure there are at least 2 repeats
+        replace(printf('%.' || max(length(str_val), 2) || 'c', '/'), '/', substring(str_val, 1, 1)) as eq_1,
+        replace(printf('%.' || max((length(str_val) / 2), 2) || 'c', '/'), '/', substring(str_val, 1, 2)) as eq_2,
+        replace(printf('%.' || max((length(str_val) / 3), 2) || 'c', '/'), '/', substring(str_val, 1, 3)) as eq_3,
+        replace(printf('%.' || max((length(str_val) / 4), 2) || 'c', '/'), '/', substring(str_val, 1, 4)) as eq_4,
+        replace(printf('%.' || max((length(str_val) / 5), 2) || 'c', '/'), '/', substring(str_val, 1, 5)) as eq_5,
+        replace(printf('%.' || max((length(str_val) / 6), 2) || 'c', '/'), '/', substring(str_val, 1, 6)) as eq_6,
+        replace(printf('%.' || max((length(str_val) / 7), 2) || 'c', '/'), '/', substring(str_val, 1, 7)) as eq_7,
+        replace(printf('%.' || max((length(str_val) / 8), 2) || 'c', '/'), '/', substring(str_val, 1, 8)) as eq_8,
+        replace(printf('%.' || max((length(str_val) / 9), 2) || 'c', '/'), '/', substring(str_val, 1, 9)) as eq_9
+    from str_vals
 )
-insert into output 
-select 1.0 as progress, sum(val) from filtered_vals
+insert into output
+
+select 1.0 as progress, sum(val) 
+from filtered_vals
+where
+    false 
+    or str_val = eq_1
+    or str_val = eq_2
+    or str_val = eq_3
+    or str_val = eq_4
+    or str_val = eq_5
+    or str_val = eq_6
+
 -- select 
 --     1.0 as progress, 
 --     concat_ws(
 --         ' ' ,
 --         'val', val
+--         ,
+--         'eq_1', str_val == eq_1,
+--         'eq_2', str_val == eq_2,
+--         'eq_3', str_val == eq_3,
+--         'eq_4', str_val == eq_4,
+--         'eq_5', str_val == eq_5,
+--         'eq_6', str_val == eq_6
 --     ) 
 -- from filtered_vals
+-- where 
+--     false
+--     or str_val = eq_1
+--     or str_val = eq_2
+--     or str_val = eq_3
+--     or str_val = eq_4
+--     or str_val = eq_5
+--     or str_val = eq_6
 -- order by val
 
 -- select 
@@ -76,6 +110,4 @@ select 1.0 as progress, sum(val) from filtered_vals
 --         'range_end', range_end
 --     ) 
 -- from clean_ranges
--- where range_start > range_end
-
--- limit 12
+-- where range_start < 10001000 and 10001000 <= range_end
