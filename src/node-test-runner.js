@@ -37,6 +37,21 @@ function formatSQLError(error, sql) {
         const lineMatch = errorMsg.match(/line (\d+)/i);
         let errorLine = lineMatch ? parseInt(lineMatch[1], 10) - 1 : -1;
         
+        // If no line number, try to find the problematic token mentioned in the error
+        if (errorLine < 0) {
+            const tokenMatch = errorMsg.match(/near "([^"]+)"/i);
+            if (tokenMatch) {
+                const token = tokenMatch[1];
+                // Find first occurrence of the token in the SQL
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].includes(token)) {
+                        errorLine = i;
+                        break;
+                    }
+                }
+            }
+        }
+        
         // If we couldn't find the line number, show first and last few lines
         if (errorLine < 0 || errorLine >= lines.length) {
             detailedError += `Your SQL contains ${lines.length} lines. Showing first and last 5 lines:\n\n`;
