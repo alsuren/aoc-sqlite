@@ -50,13 +50,13 @@ check-solutions:
 	@find puzzles -name '*-test-output.txt' | sed 's|puzzles/\(.*\)-test-output.txt|.cache/puzzles/\1.stamp|' | xargs make
 
 puzzles/%/2-real-input.txt: puzzles/%/1-real-input.txt
-	cp -n $^ $@
+	gcp --update=older $^ $@
 
 puzzles/%/2-test-input.txt: puzzles/%/1-test-input.txt
-	cp -n $^ $@
+	gcp --update=older $^ $@
 
 puzzles/%/2-test-output.txt: puzzles/%/1-test-output.txt
-	cp -n $^ $@
+	gcp --update=older $^ $@
 
 # Pattern rule to run SQL with real input and produce output
 # Usage: make puzzles/1970/01/1-real-output.txt
