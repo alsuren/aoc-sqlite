@@ -78,6 +78,78 @@ function initResultsTable() {
 }
 
 /**
+ * Format SQLite error with context
+ * @param {Error} error - The error object from SQLite
+ * @param {string} sql - The SQL that caused the error
+ * @returns {string} - Formatted error message
+ */
+function formatSQLError(error, sql) {
+    let errorMsg = error.message || 'Unknown SQL error';
+    
+    // Try to get error offset from SQLite if available
+    // sqlite3_error_offset() returns byte offset of error in UTF-8 string
+    let errorOffset = -1;
+    try {
+        if (db && sqlite3 && sqlite3.capi && sqlite3.capi.sqlite3_error_offset) {
+            errorOffset = sqlite3.capi.sqlite3_error_offset(db.pointer);
+        }
+    } catch (e) {
+        // Ignore if not available
+    }
+    
+    // SQLite errors often include position information
+    // Try to extract line/position context if available
+    const lines = sql.split('\n');
+    
+    // Convert byte offset to line and column
+    let errorLine = -1;
+    let errorColumn = -1;
+    if (errorOffset >= 0) {
+        let currentOffset = 0;
+        for (let i = 0; i < lines.length; i++) {
+            const lineLength = lines[i].length + 1; // +1 for newline
+            if (currentOffset + lineLength > errorOffset) {
+                errorLine = i + 1; // 1-indexed
+                errorColumn = errorOffset - currentOffset + 1; // 1-indexed
+                break;
+            }
+            currentOffset += lineLength;
+        }
+    }
+    
+    // Build a detailed error message
+    let detailedError = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    detailedError += `SQL ERROR: ${errorMsg}\n`;
+    if (errorLine > 0) {
+        detailedError += `Location: Line ${errorLine}, Column ${errorColumn}\n`;
+    }
+    detailedError += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    
+    // Try to find which line might have the error
+    // SQLite doesn't give us exact line numbers, but we can show the SQL
+    if (lines.length <= 25) {
+        // For short SQL, show the whole thing with line numbers
+        detailedError += 'Your SQL:\n';
+        lines.forEach((line, idx) => {
+            const lineNum = idx + 1;
+            const isErrorLine = lineNum === errorLine;
+            detailedError += `${lineNum.toString().padStart(4, ' ')} | ${line}\n`;
+            
+            // Add pointer to error column if this is the error line
+            if (isErrorLine && errorColumn > 0) {
+                detailedError += `     | ${' '.repeat(errorColumn - 1)}^\n`;
+            }
+        });
+    } else {
+        // For long SQL, just show it was long
+        detailedError += `Your SQL contains ${lines.length} lines (too long to display here)\n`;
+        detailedError += 'Try checking your SQL syntax carefully.\n';
+    }
+    
+    return detailedError;
+}
+
+/**
  * Execute SQL and return results from output table
  * @param {string} sql - SQL statements to execute (should INSERT INTO output for AoC solutions)
  * @returns {Promise<{success: boolean, error?: string, lastRow?: Object, rows?: Array, debugRows?: Array}>}
@@ -150,7 +222,7 @@ export async function executeSQL(sql) {
     } catch (error) {
         return {
             success: false,
-            error: error.message
+            error: formatSQLError(error, sql)
         };
     }
 }
