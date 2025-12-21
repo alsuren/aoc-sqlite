@@ -32,9 +32,38 @@ function formatSQLError(error, sql) {
             detailedError += `${lineNum.toString().padStart(4, ' ')} | ${line}\n`;
         });
     } else {
-        // For long SQL, just show it was long
-        detailedError += `Your SQL contains ${lines.length} lines (too long to display here)\n`;
-        detailedError += 'Try checking your SQL syntax carefully.\n';
+        // For long SQL, show surrounding lines to give context
+        // Try to extract line number from error message if available
+        const lineMatch = errorMsg.match(/line (\d+)/i);
+        let errorLine = lineMatch ? parseInt(lineMatch[1], 10) - 1 : -1;
+        
+        // If we couldn't find the line number, show first and last few lines
+        if (errorLine < 0 || errorLine >= lines.length) {
+            detailedError += `Your SQL contains ${lines.length} lines. Showing first and last 5 lines:\n\n`;
+            detailedError += 'First 5 lines:\n';
+            for (let i = 0; i < Math.min(5, lines.length); i++) {
+                detailedError += `${(i + 1).toString().padStart(4, ' ')} | ${lines[i]}\n`;
+            }
+            if (lines.length > 10) {
+                detailedError += `     | ... (${lines.length - 10} lines omitted) ...\n`;
+            }
+            if (lines.length > 5) {
+                detailedError += '\nLast 5 lines:\n';
+                for (let i = Math.max(0, lines.length - 5); i < lines.length; i++) {
+                    detailedError += `${(i + 1).toString().padStart(4, ' ')} | ${lines[i]}\n`;
+                }
+            }
+        } else {
+            // Show 5 lines before and after the error line
+            detailedError += `Your SQL contains ${lines.length} lines. Showing context around line ${errorLine + 1}:\n\n`;
+            const start = Math.max(0, errorLine - 5);
+            const end = Math.min(lines.length, errorLine + 6);
+            for (let i = start; i < end; i++) {
+                const lineNum = i + 1;
+                const marker = i === errorLine ? '→' : ' ';
+                detailedError += `${marker}${lineNum.toString().padStart(4, ' ')} | ${lines[i]}\n`;
+            }
+        }
     }
     
     return detailedError;
