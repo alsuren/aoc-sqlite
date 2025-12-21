@@ -39,6 +39,10 @@ try {
     // Create output table where solutions must insert their results
     db.exec('CREATE TABLE IF NOT EXISTS output (progress REAL, result TEXT)');
 
+    // Determine debug log filename based on input file
+    const logFile = inputFile.replace(/\.txt$/, '.log');
+    const logEntries = [];
+
     // Execute SQL repeatedly until progress reaches 1.0
     let maxIterations = 100; // Safety limit
     let iteration = 0;
@@ -48,28 +52,30 @@ try {
     while (progress < 1.0 && iteration < maxIterations) {
         iteration++;
 
-        // Clear previous output
-        db.exec('DELETE FROM output');
-
         // Execute all SQL statements in the file
         db.exec(sql);
 
-        // Read the result from the output table
-        const rows = db.prepare('SELECT progress, result FROM output').all();
-        if (rows.length > 1) {
-            // FIXME: think of a better protocol for debugging things.
-            console.error('Error: SQL inserted too many rows');
-            console.error(JSON.stringify(rows, null, 2))
-            process.exit(1);
+        // Check for debug rows (progress < 1.0)
+        const debugRows = db.prepare('SELECT progress, result FROM output WHERE progress < 1.0').all();
+        for (const row of debugRows) {
+            logEntries.push(`${row.progress}: ${row.result}`);
         }
-        const row = rows[0]
-        if (!row || typeof row.progress === 'undefined') {
+
+        // Check for final result (row with greatest progress)
+        const finalRow = db.prepare('SELECT progress, result FROM output ORDER BY progress DESC LIMIT 1').get();
+        
+        if (!finalRow && debugRows.length === 0) {
             console.error('Error: SQL did not insert into output table with progress and result columns');
             process.exit(1);
         }
 
-        progress = row.progress;
-        result = row.result;
+        if (finalRow) {
+            progress = finalRow.progress;
+            result = finalRow.result;
+        }
+
+        // Clear log entries for next iteration
+        logEntries.length = 0;
 
         // If not complete, continue loop
         if (progress < 1.0) {
@@ -80,6 +86,11 @@ try {
     if (iteration >= maxIterations) {
         console.error('Error: Maximum iterations reached without completion');
         process.exit(1);
+    }
+
+    // Write debug log if there were any debug entries
+    if (logEntries.length > 0) {
+        fs.writeFileSync(logFile, logEntries.join('\n') + '\n');
     }
 
     // Output the final result

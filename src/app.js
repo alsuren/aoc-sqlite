@@ -63,12 +63,18 @@ async function loadAndExecuteSQL(year, day, part) {
             return { success: false, error: result.error };
         }
 
+        // Log debug rows if present
+        if (result.debugRows && result.debugRows.length > 0) {
+            for (const debugRow of result.debugRows) {
+                ui.appendOutput(`Debug: Progress: ${Math.round(debugRow.progress * 100)}%, Result: ${debugRow.result}`);
+            }
+        }
+
         // Extract progress and result from last row
         const lastRow = result.lastRow;
         if (!lastRow || typeof lastRow.progress === 'undefined') {
-            const error = 'SQL did not return progress and result columns';
-            ui.showError(error);
-            return { success: false, error };
+            // No final result yet (still in progress)
+            return { success: true, progress: 0, result: null };
         }
 
         const progress = parseFloat(lastRow.progress);

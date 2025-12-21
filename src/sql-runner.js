@@ -80,7 +80,7 @@ function initResultsTable() {
 /**
  * Execute SQL and return results from output table
  * @param {string} sql - SQL statements to execute (should INSERT INTO output for AoC solutions)
- * @returns {Promise<{success: boolean, error?: string, lastRow?: Object, rows?: Array}>}
+ * @returns {Promise<{success: boolean, error?: string, lastRow?: Object, rows?: Array, debugRows?: Array}>}
  */
 export async function executeSQL(sql) {
     if (!db) {
@@ -88,9 +88,6 @@ export async function executeSQL(sql) {
     }
 
     try {
-        // Clear previous output
-        db.exec('DELETE FROM output');
-
         // Execute the SQL statements
         const directRows = [];
         db.exec({
@@ -108,26 +105,47 @@ export async function executeSQL(sql) {
             };
         }
 
-        // Otherwise read from the output table (for AoC solutions)
-        const outputRows = [];
+        // Check for debug rows (progress < 1.0)
+        const debugRows = [];
         db.exec({
-            sql: 'SELECT progress, result FROM output',
+            sql: 'SELECT progress, result FROM output WHERE progress < 1.0',
             rowMode: 'object',
-            resultRows: outputRows
+            resultRows: debugRows
         });
 
-        const lastRow = outputRows.length > 0 ? outputRows[0] : null;
+        // Check for final result (progress = 1.0)
+        const finalRows = [];
+        db.exec({
+            sql: 'SELECT progress, result FROM output WHERE progress = 1.0',
+            rowMode: 'object',
+            resultRows: finalRows
+        });
 
-        if (!lastRow || typeof lastRow.progress === 'undefined') {
+        const lastRow = finalRows.length > 0 ? finalRows[0] : null;
+
+        if (!lastRow && debugRows.length === 0) {
             return {
                 success: false,
                 error: 'SQL did not insert into output table with progress and result columns'
             };
         }
 
+        // Clear output table for next iteration
+        db.exec('DELETE FROM output');
+
+        if (!lastRow) {
+            // No final result yet, return debug rows
+            return {
+                success: true,
+                debugRows: debugRows,
+                lastRow: null
+            };
+        }
+
         return {
             success: true,
-            lastRow: lastRow
+            lastRow: lastRow,
+            debugRows: debugRows
         };
     } catch (error) {
         return {

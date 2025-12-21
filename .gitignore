@@ -5,3 +5,4 @@ test-results/
 sqlite/
 .cache/
 *-real-output.txt
+*.log
