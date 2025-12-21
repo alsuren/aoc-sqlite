@@ -35,6 +35,7 @@ clean:
 	ACTUAL=$$(node src/node-test-runner.js puzzles/$*.sql puzzles/$*-test-input.txt 2>&1); \
 	if [ "$$ACTUAL" = "$$EXPECTED" ]; then \
 		echo "✓ Test passed: puzzles/$*.sql"; \
+		mkdir -p $(dir $@); \
 		touch $@; \
 	else \
 		echo "✗ Test failed: puzzles/$*.sql"; \

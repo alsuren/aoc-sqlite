@@ -51,19 +51,21 @@ try {
 
     while (progress < 1.0 && iteration < maxIterations) {
         iteration++;
+        // Clear log entries for next iteration
+        logEntries.length = 0;
 
         // Execute all SQL statements in the file
         db.exec(sql);
 
         // Check for debug rows (progress < 1.0)
-        const debugRows = db.prepare('SELECT progress, result FROM output WHERE progress < 1.0').all();
+        const debugRows = db.prepare('SELECT progress, result FROM output').all();
         for (const row of debugRows) {
             logEntries.push(`${row.progress}: ${row.result}`);
         }
 
         // Check for final result (row with greatest progress)
-        const finalRow = db.prepare('SELECT progress, result FROM output ORDER BY progress DESC LIMIT 1').get();
-        
+        const finalRow = db.prepare('SELECT progress, result FROM output ORDER BY progress = 1 desc, progress DESC LIMIT 1').get();
+
         if (!finalRow && debugRows.length === 0) {
             console.error('Error: SQL did not insert into output table with progress and result columns');
             process.exit(1);
@@ -73,9 +75,6 @@ try {
             progress = finalRow.progress;
             result = finalRow.result;
         }
-
-        // Clear log entries for next iteration
-        logEntries.length = 0;
 
         // If not complete, continue loop
         if (progress < 1.0) {
@@ -90,7 +89,10 @@ try {
 
     // Write debug log if there were any debug entries
     if (logEntries.length > 0) {
-        fs.writeFileSync(logFile, logEntries.join('\n') + '\n');
+        const contents = logEntries.join('\n') + '\n'
+        if (!fs.existsSync(logFile) || fs.readFileSync(logFile) !== contents) {
+            fs.writeFileSync(logFile, contents);
+        }
     }
 
     // Output the final result
