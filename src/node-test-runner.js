@@ -24,19 +24,43 @@ function formatSQLError(error, sql) {
     
     // Show the SQL for context
     const lines = sql.split('\n');
+    
+    // Try to use byteOffset from Bun's SQLite error
+    let errorLineFromOffset = -1;
+    let errorColumnFromOffset = -1;
+    if (error.byteOffset !== undefined && error.byteOffset >= 0) {
+        let offset = 0;
+        for (let i = 0; i < lines.length; i++) {
+            if (offset + lines[i].length >= error.byteOffset) {
+                errorLineFromOffset = i;
+                errorColumnFromOffset = error.byteOffset - offset;
+                break;
+            }
+            offset += lines[i].length + 1; // +1 for newline
+        }
+    }
     if (lines.length <= 25) {
         // For short SQL, show the whole thing with line numbers
         detailedError += 'Your SQL:\n';
         lines.forEach((line, idx) => {
             const lineNum = idx + 1;
-            detailedError += `${lineNum.toString().padStart(4, ' ')} | ${line}\n`;
+            const marker = idx === errorLineFromOffset ? '→' : ' ';
+            detailedError += `${marker}${lineNum.toString().padStart(4, ' ')} | ${line}\n`;
+            // Add column pointer if we have it
+            if (idx === errorLineFromOffset && errorColumnFromOffset >= 0) {
+                detailedError += `      | ${' '.repeat(errorColumnFromOffset)}^\n`;
+            }
         });
     } else {
         // For long SQL, show surrounding lines to give context
-        // Try to extract line number from error message if available
-        const lineMatch = errorMsg.match(/line (\d+)/i);
-        let errorLine = lineMatch ? parseInt(lineMatch[1], 10) - 1 : -1;
+        // Prefer byteOffset if available, otherwise try to extract line number from error message
+        let errorLine = errorLineFromOffset;
         let foundViaToken = false;
+        
+        if (errorLine < 0) {
+            const lineMatch = errorMsg.match(/line (\d+)/i);
+            errorLine = lineMatch ? parseInt(lineMatch[1], 10) - 1 : -1;
+        }
         
         // If no line number, try to find the problematic token mentioned in the error
         if (errorLine < 0) {
@@ -73,7 +97,9 @@ function formatSQLError(error, sql) {
             }
         } else {
             // Show 5 lines before and after the error line
-            if (lineMatch) {
+            if (errorLineFromOffset >= 0) {
+                detailedError += `Location: Line ${errorLine + 1}, Column ${errorColumnFromOffset + 1} (from byteOffset)\n`;
+            } else if (errorLine >= 0 && !foundViaToken) {
                 detailedError += `Location: Line ${errorLine + 1}\n`;
             } else if (foundViaToken) {
                 detailedError += `Location: Line ${errorLine + 1} (found by searching for error token)\n`;
@@ -85,6 +111,10 @@ function formatSQLError(error, sql) {
                 const lineNum = i + 1;
                 const marker = i === errorLine ? '→' : ' ';
                 detailedError += `${marker}${lineNum.toString().padStart(4, ' ')} | ${lines[i]}\n`;
+                // Add column pointer if we have it
+                if (i === errorLine && errorColumnFromOffset >= 0) {
+                    detailedError += `      | ${' '.repeat(errorColumnFromOffset)}^\n`;
+                }
             }
         }
     }
