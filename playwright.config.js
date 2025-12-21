@@ -20,7 +20,7 @@ export default defineConfig({
     ],
 
     webServer: {
-        command: 'npm run serve:test',
+        command: 'bun run serve:test',
         url: 'http://localhost:8001',
         reuseExistingServer: !process.env.CI,
     },

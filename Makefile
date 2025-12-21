@@ -1,21 +1,21 @@
 .PHONY: install test test-ui serve clean check-solutions solve-all
 
 install:
-	npm install
-	npx playwright install chromium
+	bun install
+	bunx playwright install chromium
 	mkdir -p sqlite
 	curl -L -o /tmp/sqlite-wasm.zip https://sqlite.org/2025/sqlite-wasm-3510100.zip
 	unzip -o /tmp/sqlite-wasm.zip -d sqlite
 	rm /tmp/sqlite-wasm.zip
 
 test:
-	npm test
+	bunx playwright test
 
 test-ui:
-	npm run test:ui
+	bun run test:ui
 
 serve:
-	npm run serve
+	bun run serve
 
 clean:
 	rm -rf node_modules
@@ -32,7 +32,7 @@ clean:
 	@mkdir -p $(dir $@)
 	@echo "Testing puzzles/$*.sql..."
 	@EXPECTED=$$(cat puzzles/$*-test-output.txt); \
-	ACTUAL=$$(node src/node-test-runner.js puzzles/$*.sql puzzles/$*-test-input.txt 2>&1); \
+	ACTUAL=$$(bun src/node-test-runner.js puzzles/$*.sql puzzles/$*-test-input.txt 2>&1); \
 	if [ "$$ACTUAL" = "$$EXPECTED" ]; then \
 		echo "✓ Test passed: puzzles/$*.sql"; \
 		mkdir -p $(dir $@); \
@@ -64,7 +64,7 @@ puzzles/%/2-test-output.txt: puzzles/%/1-test-output.txt
 .PRECIOUS: puzzles/%-real-output.txt
 puzzles/%-real-output.txt: puzzles/%.sql puzzles/%-real-input.txt .cache/puzzles/%.stamp
 	@echo "Running puzzles/$*.sql with real input..."
-	@RESULT=$$(node src/node-test-runner.js puzzles/$*.sql puzzles/$*-real-input.txt); \
+	@RESULT=$$(bun src/node-test-runner.js puzzles/$*.sql puzzles/$*-real-input.txt); \
 	echo "$$RESULT" | tee $@
 
 # Helper target to run all SQL solutions with real input

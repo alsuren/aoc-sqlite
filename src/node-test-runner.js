@@ -1,18 +1,50 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
- * Node.js SQL test runner that mimics the browser's progressive execution
- * Usage: node src/node-test-runner.js <sql-file> <input-file>
+ * Bun SQL test runner that mimics the browser's progressive execution
+ * Usage: bun src/node-test-runner.js <sql-file> <input-file>
  */
 
-import Database from 'better-sqlite3';
+import { Database } from 'bun:sqlite';
 import fs from 'fs';
+
+/**
+ * Format SQLite error with context
+ * @param {Error} error - The error object from SQLite
+ * @param {string} sql - The SQL that caused the error
+ * @returns {string} - Formatted error message
+ */
+function formatSQLError(error, sql) {
+    let errorMsg = error.message || 'Unknown SQL error';
+    
+    // Build a detailed error message
+    let detailedError = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    detailedError += `SQL ERROR: ${errorMsg}\n`;
+    detailedError += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    
+    // Show the SQL for context
+    const lines = sql.split('\n');
+    if (lines.length <= 25) {
+        // For short SQL, show the whole thing with line numbers
+        detailedError += 'Your SQL:\n';
+        lines.forEach((line, idx) => {
+            const lineNum = idx + 1;
+            detailedError += `${lineNum.toString().padStart(4, ' ')} | ${line}\n`;
+        });
+    } else {
+        // For long SQL, just show it was long
+        detailedError += `Your SQL contains ${lines.length} lines (too long to display here)\n`;
+        detailedError += 'Try checking your SQL syntax carefully.\n';
+    }
+    
+    return detailedError;
+}
 
 const sqlFile = process.argv[2];
 const inputFile = process.argv[3];
 
 if (!sqlFile || !inputFile) {
-    console.error('Usage: node src/node-test-runner.js <sql-file> <input-file>');
+    console.error('Usage: bun src/node-test-runner.js <sql-file> <input-file>');
     process.exit(1);
 }
 
@@ -24,7 +56,7 @@ try {
     const db = new Database(':memory:');
 
     // Always create and populate input_data table from the input file
-    db.exec('CREATE TABLE IF NOT EXISTS input_data(line TEXT)');
+    db.run('CREATE TABLE IF NOT EXISTS input_data(line TEXT)');
 
     if (fs.existsSync(inputFile)) {
         const inputData = fs.readFileSync(inputFile, 'utf8');
@@ -37,7 +69,7 @@ try {
     }
 
     // Create output table where solutions must insert their results
-    db.exec('CREATE TABLE IF NOT EXISTS output (progress REAL, result TEXT)');
+    db.run('CREATE TABLE IF NOT EXISTS output (progress REAL, result TEXT)');
 
     // Determine debug log filename based on input file
     const logFile = inputFile.replace(/\.txt$/, '.log');
@@ -55,7 +87,7 @@ try {
         logEntries.length = 0;
 
         // Execute all SQL statements in the file
-        db.exec(sql);
+        db.run(sql);
 
         // Check for debug rows (progress < 1.0)
         const debugRows = db.prepare('SELECT progress, result FROM output').all();
@@ -100,6 +132,6 @@ try {
 
     db.close();
 } catch (error) {
-    console.error('Error:', error.message);
+    console.error(formatSQLError(error, fs.readFileSync(sqlFile, 'utf8')));
     process.exit(1);
 }

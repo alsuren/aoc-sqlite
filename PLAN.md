@@ -25,7 +25,7 @@ Build a vanilla JavaScript application that runs Advent of Code solutions writte
 │   ├── 01/2.sql        # Progressive test
 │   └── 02/1.sql        # Error case test
 ├── Makefile            # Build and test automation
-├── package.json        # Node.js dependencies (Playwright, etc.)
+├── package.json        # Bun dependencies (Playwright, etc.)
 ├── playwright.config.js # Playwright configuration
 └── [year]/[day]/[part].sql  # Solution files (user-provided)
 ```
@@ -176,7 +176,7 @@ CREATE TABLE IF NOT EXISTS results (
 - Note: Year 1970 is used to avoid confusion with actual AoC years (2015-present)
 
 **Makefile Targets:**
-- `make install` - Install npm dependencies (Playwright)
+- `make install` - Install bun dependencies (Playwright)
 - `make test` - Run automated tests
 - `make test-ui` - Run tests with Playwright UI for debugging
 - `make serve` - Start development server manually
