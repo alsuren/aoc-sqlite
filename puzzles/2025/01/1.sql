@@ -47,5 +47,6 @@ rolling_sum as (
 position as (
     select cast(mod(mod(val, 100)+ 100, 100) as integer) as val from rolling_sum
 )
-select 1.0 as progress, * from position
--- SELECT 1.0 as progress, count(*) as result from position where val = 0;
+select 'position', val from position
+union all
+SELECT 1.0 as progress, count(*) as result from position where val = 0;
