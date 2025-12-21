@@ -36,6 +36,7 @@ function formatSQLError(error, sql) {
         // Try to extract line number from error message if available
         const lineMatch = errorMsg.match(/line (\d+)/i);
         let errorLine = lineMatch ? parseInt(lineMatch[1], 10) - 1 : -1;
+        let foundViaToken = false;
         
         // If no line number, try to find the problematic token mentioned in the error
         if (errorLine < 0) {
@@ -46,6 +47,7 @@ function formatSQLError(error, sql) {
                 for (let i = 0; i < lines.length; i++) {
                     if (lines[i].includes(token)) {
                         errorLine = i;
+                        foundViaToken = true;
                         break;
                     }
                 }
@@ -54,7 +56,8 @@ function formatSQLError(error, sql) {
         
         // If we couldn't find the line number, show first and last few lines
         if (errorLine < 0 || errorLine >= lines.length) {
-            detailedError += `Your SQL contains ${lines.length} lines. Showing first and last 5 lines:\n\n`;
+            detailedError += `Your SQL contains ${lines.length} lines. Showing first and last 5 lines:\n`;
+            detailedError += `⚠️  Warning: Could not determine error location from SQLite\n\n`;
             detailedError += 'First 5 lines:\n';
             for (let i = 0; i < Math.min(5, lines.length); i++) {
                 detailedError += `${(i + 1).toString().padStart(4, ' ')} | ${lines[i]}\n`;
@@ -70,6 +73,11 @@ function formatSQLError(error, sql) {
             }
         } else {
             // Show 5 lines before and after the error line
+            if (lineMatch) {
+                detailedError += `Location: Line ${errorLine + 1}\n`;
+            } else if (foundViaToken) {
+                detailedError += `Location: Line ${errorLine + 1} (found by searching for error token)\n`;
+            }
             detailedError += `Your SQL contains ${lines.length} lines. Showing context around line ${errorLine + 1}:\n\n`;
             const start = Math.max(0, errorLine - 5);
             const end = Math.min(lines.length, errorLine + 6);
