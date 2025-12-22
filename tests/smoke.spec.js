@@ -151,6 +151,172 @@ test.describe('SQL File Execution', () => {
     });
 });
 
+test.describe('SQL Error Formatting', () => {
+    test('shows detailed error for syntax error in single statement', async ({ page }) => {
+        await page.goto('/');
+
+        // Wait for SQLite to be ready
+        await page.waitForFunction(() => window.sqlRunner !== undefined, { timeout: 10000 });
+
+        // Execute SQL with syntax error
+        const result = await page.evaluate(async () => {
+            return await window.sqlRunner.executeSQL('SELECT * FORM output');
+        });
+
+        expect(result.success).toBe(false);
+        expect(result.error).toContain('SQL ERROR');
+        expect(result.error).toContain('FORM'); // Error should highlight the problematic keyword
+    });
+
+    test('shows statement number for multi-statement SQL error', async ({ page }) => {
+        await page.goto('/');
+
+        // Wait for SQLite to be ready
+        await page.waitForFunction(() => window.sqlRunner !== undefined, { timeout: 10000 });
+
+        // Execute multi-statement SQL where first statement succeeds, 
+        // but second statement has a prepare error (happens after first executes)
+        const result = await page.evaluate(async () => {
+            return await window.sqlRunner.executeSQL(`
+                INSERT INTO output (progress, result) VALUES (0.5, 'first statement ok');
+                SELECT * FORM output;
+                INSERT INTO output (progress, result) VALUES (1.0, 'third statement');
+            `);
+        });
+
+        expect(result.success).toBe(false);
+        expect(result.error).toContain('SQL ERROR');
+        // The error is in statement #2 (after statement #1 was prepared successfully)
+        expect(result.error).toContain('Failed at statement #2');
+        expect(result.error).toContain('Failing statement:');
+        // Now shows full context with correct line numbers (small file, <= 25 lines)
+        expect(result.error).toContain('SELECT * FORM output');
+    });
+
+    test('shows line and column numbers for error location', async ({ page }) => {
+        await page.goto('/');
+
+        // Wait for SQLite to be ready
+        await page.waitForFunction(() => window.sqlRunner !== undefined, { timeout: 10000 });
+
+        // Execute multi-line SQL with syntax error
+        const result = await page.evaluate(async () => {
+            return await window.sqlRunner.executeSQL(`
+                INSERT INTO output (progress, result)
+                VALUES (1.0, 'test');
+                
+                SELECT
+                    progress,
+                    result FORM output
+                WHERE progress = 1.0;
+            `);
+        });
+
+        expect(result.success).toBe(false);
+        expect(result.success).toBe(false);
+        expect(result.error).toContain('SQL ERROR');
+        expect(result.error).toContain('Failed at statement #2');
+        expect(result.error).toContain('Location: Line');
+        expect(result.error).toContain('Column');
+        // Should have a pointer (^) showing error location
+        expect(result.error).toContain('^');
+    });
+
+    test('handles error in first statement of multi-statement SQL', async ({ page }) => {
+        await page.goto('/');
+
+        // Wait for SQLite to be ready
+        await page.waitForFunction(() => window.sqlRunner !== undefined, { timeout: 10000 });
+
+        // Execute multi-statement SQL with error in first statement
+        const result = await page.evaluate(async () => {
+            return await window.sqlRunner.executeSQL(`
+                SELECT * FORM output;
+                INSERT INTO output (progress, result) VALUES (1.0, 'second');
+            `);
+        });
+
+        expect(result.success).toBe(false);
+        expect(result.error).toContain('SQL ERROR');
+        // When first statement fails, no statement number is shown
+        expect(result.error).toContain('Your SQL:');
+        expect(result.error).toContain('SELECT * FORM output');
+    });
+
+    test('handles table not found error with statement context', async ({ page }) => {
+        await page.goto('/');
+
+        // Wait for SQLite to be ready
+        await page.waitForFunction(() => window.sqlRunner !== undefined, { timeout: 10000 });
+
+        // Execute multi-statement SQL with non-existent table in second statement
+        const result = await page.evaluate(async () => {
+            return await window.sqlRunner.executeSQL(`
+                INSERT INTO output (progress, result) VALUES (0.5, 'ok');
+                SELECT * FROM nonexistent_table;
+                INSERT INTO output (progress, result) VALUES (1.0, 'done');
+            `);
+        });
+
+        expect(result.success).toBe(false);
+        expect(result.error).toContain('SQL ERROR');
+        expect(result.error).toContain('Failed at statement #2');
+        expect(result.error).toContain('nonexistent_table');
+        expect(result.error).toContain('Failing statement:');
+    });
+
+    test('error pointer aligns correctly with whitespace between statements', async ({ page }) => {
+        await page.goto('/');
+
+        // Wait for SQLite to be ready
+        await page.waitForFunction(() => window.sqlRunner !== undefined, { timeout: 10000 });
+
+        // Execute multi-statement SQL with whitespace before error
+        const result = await page.evaluate(async () => {
+            return await window.sqlRunner.executeSQL(`
+                INSERT INTO output (progress, result) VALUES (0.5, 'first');
+
+                SELECT * FORM output WHERE progress = 0.5;
+            `);
+        });
+
+        expect(result.success).toBe(false);
+        expect(result.error).toContain('SQL ERROR');
+        
+        // The error should show "FORM" as the problem (syntax error)
+        expect(result.error).toContain('FORM');
+        
+        // Check that we show the location
+        expect(result.error).toContain('Location: Line');
+        
+        // Extract lines to check pointer alignment
+        const errorLines = result.error.split('\n');
+        
+        // Find the line with "SELECT * FORM"
+        const formLineIndex = errorLines.findIndex(line => line.includes('SELECT * FORM output'));
+        expect(formLineIndex).toBeGreaterThan(-1);
+        
+        const formLine = errorLines[formLineIndex];
+        const pointerLine = errorLines[formLineIndex + 1];
+        
+        // Should have the pointer
+        expect(pointerLine).toContain('^');
+        
+        // Find positions
+        const formPosition = formLine.indexOf('FORM');
+        const wherePosition = formLine.indexOf('WHERE');
+        const pointerPosition = pointerLine.indexOf('^');
+        
+        console.log(`Line: "${formLine}"`);
+        console.log(`Pointer line: "${pointerLine}"`);
+        console.log(`FORM at position ${formPosition}, WHERE at position ${wherePosition}, pointer at position ${pointerPosition}`);
+        
+        // The pointer should align with FORM (the actual syntax error), not WHERE
+        // Allow small margin for line number prefix spacing
+        expect(Math.abs(pointerPosition - formPosition)).toBeLessThanOrEqual(2);
+    });
+});
+
 test.describe('Database Management', () => {
     test('reset button shows confirmation', async ({ page }) => {
         await page.goto('/');
