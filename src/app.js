@@ -43,7 +43,7 @@ async function loadAndExecuteSQL(year, day, part) {
         if (inputResponse.ok) {
             const inputText = await inputResponse.text();
             const lines = inputText.split('\n').filter(line => line.length > 0);
-            
+
             // Clear and populate input_data table
             const db = getDB();
             db.exec('DELETE FROM input_data');
@@ -74,7 +74,21 @@ async function loadAndExecuteSQL(year, day, part) {
         const lastRow = result.lastRow;
         if (!lastRow || typeof lastRow.progress === 'undefined') {
             // No final result yet (still in progress)
-            return { success: true, progress: 0, result: null };
+            // Use the highest progress from debugRows if available
+            let maxProgress = 0;
+            let maxResult = null;
+            if (result.debugRows && result.debugRows.length > 0) {
+                for (const row of result.debugRows) {
+                    const p = parseFloat(row.progress);
+                    if (!isNaN(p) && p > maxProgress) {
+                        maxProgress = p;
+                        maxResult = row.result;
+                    }
+                }
+                ui.updateProgress(maxProgress);
+                ui.updateResult(maxResult);
+            }
+            return { success: true, progress: maxProgress, result: maxResult, debugRows: result.debugRows };
         }
 
         const progress = parseFloat(lastRow.progress);
@@ -84,7 +98,7 @@ async function loadAndExecuteSQL(year, day, part) {
         ui.updateResult(resultValue);
         ui.appendOutput(`Progress: ${Math.round(progress * 100)}%, Result: ${resultValue}`);
 
-        return { success: true, progress, result: resultValue };
+        return { success: true, progress, result: resultValue, debugRows: result.debugRows };
     } catch (error) {
         ui.showError(error.message);
         return { success: false, error: error.message };
@@ -112,6 +126,7 @@ async function runPuzzle(year, day, part) {
 
     let iterations = 0;
     const maxIterations = 1000; // Safety limit
+    let maxProgressSoFar = -1;
 
     while (!shouldStop && iterations < maxIterations) {
         iterations++;
@@ -128,6 +143,29 @@ async function runPuzzle(year, day, part) {
             await saveResult(year, day, part, result.progress, result.result);
             ui.markCompletedPuzzles();
             break;
+        }
+
+        // Check if we have in-progress rows (0 <= progress < 1)
+        const hasInProgressRows = result.debugRows && result.debugRows.length > 0 &&
+            result.debugRows.some(row => {
+                const progress = parseFloat(row.progress);
+                return !isNaN(progress) && progress >= 0 && progress < 1.0;
+            });
+
+        if (!hasInProgressRows) {
+            // No in-progress rows, stop retrying
+            ui.appendOutput('No in-progress rows (0 ≤ progress < 1), stopping');
+            break;
+        }
+
+        // Check for forward progress
+        const currentProgress = parseFloat(result.progress);
+        if (!isNaN(currentProgress)) {
+            if (currentProgress <= maxProgressSoFar && iterations > 1) {
+                ui.appendOutput(`No forward progress (stuck at ${Math.round(currentProgress * 100)}%), stopping`);
+                break;
+            }
+            maxProgressSoFar = currentProgress;
         }
 
         // Wait for next frame before continuing

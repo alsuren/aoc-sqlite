@@ -282,35 +282,35 @@ test.describe('SQL Error Formatting', () => {
 
         expect(result.success).toBe(false);
         expect(result.error).toContain('SQL ERROR');
-        
+
         // The error should show "FORM" as the problem (syntax error)
         expect(result.error).toContain('FORM');
-        
+
         // Check that we show the location
         expect(result.error).toContain('Location: Line');
-        
+
         // Extract lines to check pointer alignment
         const errorLines = result.error.split('\n');
-        
+
         // Find the line with "SELECT * FORM"
         const formLineIndex = errorLines.findIndex(line => line.includes('SELECT * FORM output'));
         expect(formLineIndex).toBeGreaterThan(-1);
-        
+
         const formLine = errorLines[formLineIndex];
         const pointerLine = errorLines[formLineIndex + 1];
-        
+
         // Should have the pointer
         expect(pointerLine).toContain('^');
-        
+
         // Find positions
         const formPosition = formLine.indexOf('FORM');
         const wherePosition = formLine.indexOf('WHERE');
         const pointerPosition = pointerLine.indexOf('^');
-        
+
         console.log(`Line: "${formLine}"`);
         console.log(`Pointer line: "${pointerLine}"`);
         console.log(`FORM at position ${formPosition}, WHERE at position ${wherePosition}, pointer at position ${pointerPosition}`);
-        
+
         // The pointer should align with FORM (the actual syntax error), not WHERE
         // Allow small margin for line number prefix spacing
         expect(Math.abs(pointerPosition - formPosition)).toBeLessThanOrEqual(2);
