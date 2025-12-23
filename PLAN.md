@@ -3,7 +3,170 @@
 ## Overview
 Build a vanilla JavaScript application that runs Advent of Code solutions written in SQLite directly in the browser, with optional OPFS persistence and progress tracking.
 
-## Project Structure
+---
+
+## Isomorphic SQLite Runner Reconciliation Plan
+
+### Goal
+Reconcile `sql-runner.js` (browser/web) and `node-test-runner.js` (CLI/bun) into a single isomorphic JS file that:
+- Works in both browser and Bun environments
+- Shares error formatting, SQL execution logic, and progress loop behavior
+- Enables unit testing without Playwright
+
+### Current State Analysis
+
+**`sql-runner.js` (Browser)**
+- Uses `globalThis.sqlite3InitModule` loaded via script tag
+- Uses `sqlite3.oo1.DB` API (object-oriented wrapper)
+- Supports OPFS persistence with in-memory fallback
+- Has `formatSQLError()` with `sqlite3_error_offset` support
+- Manages `input_data`, `output`, `results` tables
+- Exports: `initSQLite`, `executeSQL`, `getDB`, `resetDatabase`, `exportDatabase`, `saveResult`, `getCompletedResults`
+
+**`node-test-runner.js` (Bun CLI)**
+- Uses `import { Database } from 'bun:sqlite'`
+- Uses Bun's SQLite API (different from sqlite-wasm)
+- Has own `formatSQLError()` with `byteOffset` support
+- Self-contained script with CLI argument parsing
+- Creates tables, loads input, runs progress loop, writes log file
+
+### Key Differences to Reconcile
+
+| Aspect | Browser (`sql-runner.js`) | Bun (`node-test-runner.js`) |
+|--------|---------------------------|----------------------------|
+| Import | `globalThis.sqlite3InitModule` | `import { Database } from 'bun:sqlite'` |
+| DB API | `sqlite3.oo1.DB`, `db.exec({sql, rowMode, resultRows})` | `new Database()`, `db.run()`, `db.prepare().all()` |
+| Error offset | `sqlite3.capi.sqlite3_error_offset()` | `error.byteOffset` |
+| Persistence | OPFS or `:memory:` | `:memory:` only |
+| Input loading | Via UI fetch + SQL INSERT | Via `fs.readFileSync` + prepared statement |
+
+### Proposed Architecture
+
+```
+src/
+├── isomorphic-sql-runner.js   # Shared logic (error formatting, progress loop)
+├── sql-runner.js              # Browser adapter (thin wrapper using isomorphic)
+├── bun-sql-runner.js          # Bun adapter (thin wrapper using isomorphic)
+├── bun-test-runner.js         # CLI entrypoint (uses bun-sql-runner)
+└── ...
+```
+
+### Implementation Steps
+
+#### Phase 1: Create Isomorphic Core Module ✅
+- [x] Create `src/isomorphic-sql-runner.js` with:
+  - `formatSQLError(error, sql, options)` - unified error formatting
+    - Accept `getErrorOffset` callback for environment-specific offset extraction
+  - `runProgressLoop(executeOnce, options)` - shared progress loop logic
+  - `createInputTableSQL(lines)` - generate SQL for populating input_data
+  - `parseOutputRows(rows)` - extract progress/result from output table
+
+#### Phase 2: Create Bun Adapter ✅
+- [x] Create `src/bun-sql-runner.js`:
+  ```js
+  import sqlite3InitModule from '../node_modules/@sqlite.org/sqlite-wasm/sqlite-wasm/jswasm/sqlite3.mjs';
+  import { formatSQLError, parseOutputRows } from './isomorphic-sql-runner.js';
+  ```
+  - Using `@sqlite.org/sqlite-wasm` for true isomorphism with browser
+  - Export: `initSQLite`, `executeSQL`, `loadInputData`, `getDB`, `closeDB`
+
+#### Phase 3: Refactor Browser sql-runner.js ✅
+- [x] Refactor `src/sql-runner.js` to use isomorphic module:
+  ```js
+  import { formatSQLError as formatSQLErrorIsomorphic, parseOutputRows } from './isomorphic-sql-runner.js';
+  ```
+  - Keep browser-specific: OPFS init, script tag loading, `window.sqlRunner`
+
+#### Phase 4: Create bun-test-runner.js ✅
+- [x] Create `src/bun-test-runner.js` (renamed from node-test-runner.js):
+  ```js
+  #!/usr/bin/env bun
+  import { initSQLite, executeSQL, loadInputData } from './bun-sql-runner.js';
+  import { runProgressLoop } from './isomorphic-sql-runner.js';
+  // CLI argument parsing and orchestration only
+  ```
+
+#### Phase 5: Add Unit Tests ✅
+- [x] Create `src/isomorphic-sql-runner.test.js`:
+  - Test `formatSQLError` with various error types
+  - Test `runProgressLoop` with mock executor
+  - Test `parseOutputRows` edge cases
+- [x] Create `src/bun-sql-runner.test.js`:
+  - Test actual SQL execution in Bun
+  - Test input loading
+  - Test progress loop integration
+- [x] Update `package.json`:
+  ```json
+  {
+    "scripts": {
+      "test:unit": "bun test src/",
+      "test:e2e": "playwright test",
+      "test": "bun test src/ && playwright test"
+    },
+    "engines": {
+      "bun": ">=1.0.0"
+    }
+  }
+  ```
+
+#### Phase 6: Decide on SQLite Library for Bun ✅
+**Chosen: Option A** - Use `@sqlite.org/sqlite-wasm` in Bun for true isomorphism.
+
+Note: The `@sqlite.org/sqlite-wasm` package has a broken `node.mjs` export, so we use the direct path:
+```js
+import sqlite3InitModule from '../node_modules/@sqlite.org/sqlite-wasm/sqlite-wasm/jswasm/sqlite3.mjs';
+```
+
+This ensures:
+- Identical SQL behavior in both environments
+- Single error format implementation
+- Easier to maintain long-term
+
+### Package.json Updates (Implemented)
+
+```json
+{
+  "name": "aoc-sqlite",
+  "type": "module",
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "scripts": {
+    "test": "bun test src/ && playwright test",
+    "test:unit": "bun test",
+    "test:e2e": "playwright test",
+    "run": "bun src/node-test-runner.js"
+  },
+  "dependencies": {
+    "@sqlite.org/sqlite-wasm": "^3.46.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}
+```
+
+### Migration Notes
+
+1. **Remove vendored SQLite WASM** from `sqlite/` - use npm package instead
+2. **Update `index.html`** to load from `node_modules/@sqlite.org/sqlite-wasm/...`
+3. **Keep backwards compatibility** - browser version should work identically
+4. **Gradual migration** - can keep old `node-test-runner.js` working during transition
+
+### Testing Strategy
+
+1. **Unit tests** (Bun): Test core logic without browser
+   - Error formatting
+   - Progress loop behavior
+   - SQL execution
+2. **Integration tests** (Playwright): Test browser-specific features
+   - OPFS persistence
+   - UI interactions
+   - Full puzzle execution
+
+---
+
+## Original Project Structure
 ```
 /
 ├── index.html          # Main HTML file

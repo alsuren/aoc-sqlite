@@ -1,8 +1,35 @@
 // SQLite WASM runner with OPFS persistence and in-memory fallback
 // Exposes methods to initialize SQLite and execute SQL
 
+import { formatSQLError as formatSQLErrorIsomorphic, parseOutputRows } from './isomorphic-sql-runner.js';
+
 let db = null;
 let sqlite3 = null;
+
+/**
+ * Get error offset from SQLite
+ * @returns {number} - Byte offset or -1
+ */
+function getErrorOffset() {
+    if (db && sqlite3 && sqlite3.capi && sqlite3.capi.sqlite3_error_offset) {
+        return sqlite3.capi.sqlite3_error_offset(db.pointer);
+    }
+    return -1;
+}
+
+/**
+ * Format SQLite error with context (browser-specific wrapper)
+ * @param {Error} error - The error object from SQLite
+ * @param {string} sql - The full SQL that was passed to exec()
+ * @param {Array<string>} executedStatements - Array of statements that were prepared before the error
+ * @returns {string} - Formatted error message
+ */
+function formatSQLError(error, sql, executedStatements = []) {
+    return formatSQLErrorIsomorphic(error, sql, {
+        getErrorOffset: () => getErrorOffset(),
+        executedStatements
+    });
+}
 
 /**
  * Initialize SQLite WASM
@@ -75,167 +102,6 @@ function initResultsTable() {
         CREATE TABLE IF NOT EXISTS progress_counter (run_count INTEGER);
         INSERT INTO progress_counter SELECT 0 WHERE NOT EXISTS (SELECT 1 FROM progress_counter);
     `);
-}
-
-/**
- * Format SQLite error with context
- * @param {Error} error - The error object from SQLite
- * @param {string} sql - The full SQL that was passed to exec()
- * @param {Array<string>} executedStatements - Array of statements that were prepared before the error
- * @returns {string} - Formatted error message
- */
-function formatSQLError(error, sql, executedStatements = []) {
-    let errorMsg = error.message || 'Unknown SQL error';
-
-    // Try to get error offset from SQLite if available
-    // sqlite3_error_offset() returns byte offset within the failing statement
-    let errorOffset = -1;
-    try {
-        if (db && sqlite3 && sqlite3.capi && sqlite3.capi.sqlite3_error_offset) {
-            errorOffset = sqlite3.capi.sqlite3_error_offset(db.pointer);
-        }
-    } catch (e) {
-        // Ignore if not available
-    }
-
-    // Determine which statement failed and what type of error occurred
-    // - Syntax errors during prepare: failing statement is NOT in saveSql yet  
-    // - Semantic errors during prepare (like "no such table"): also NOT in saveSql yet
-    // - Runtime errors during step: failing statement IS in saveSql
-    // 
-    // In practice, most errors happen during prepare (both syntax and semantic).
-    // If we have N statements in saveSql, the error is in statement #(N+1).
-    // If saveSql is empty, the error is in statement #1 (or the entire SQL if single statement).
-
-    let failingStatement;
-    let statementNumber;
-    let statementStartOffset = 0; // Track where the failing statement starts in the original SQL
-
-    if (executedStatements.length > 0) {
-        // Some statements prepared successfully, error is in the next one
-        // Calculate where in the original SQL the failing statement starts
-        // by finding where the successfully executed statements are located
-        let consumedBytes = 0;
-        for (const stmt of executedStatements) {
-            // Find this statement in the remaining SQL
-            const remainingSQL = sql.substring(consumedBytes);
-            const stmtIndex = remainingSQL.indexOf(stmt);
-            if (stmtIndex !== -1) {
-                // Move past this statement (including any whitespace/semicolons after it)
-                consumedBytes += stmtIndex + stmt.length;
-            }
-        }
-        
-        // The failing statement starts where we left off, but we need to skip
-        // past any whitespace/semicolons that come after the last executed statement
-        const remainingSQL = sql.substring(consumedBytes);
-        const trimmedStart = remainingSQL.match(/^[\s;]*/)[0].length;
-        
-        // statementStartOffset is where SQLite started parsing (including whitespace)
-        // because errorOffset from SQLite is relative to the start of the remaining SQL
-        statementStartOffset = consumedBytes;
-        failingStatement = remainingSQL.substring(trimmedStart);
-        statementNumber = executedStatements.length + 1;
-    } else {
-        // No statements were successfully prepared (error in first statement)
-        failingStatement = sql;
-        statementStartOffset = 0;
-        statementNumber = 0; // Don't show statement number for first statement errors
-    }
-
-    // Work with the original SQL to get correct line numbers
-    const allLines = sql.split('\n');
-    const lines = failingStatement.split('\n');
-
-    // Convert byte offset (within failing statement) to line and column in the ORIGINAL SQL
-    let errorLine = -1;
-    let errorColumn = -1;
-    if (errorOffset >= 0) {
-        // errorOffset is relative to the failing statement, so add statementStartOffset
-        const absoluteErrorOffset = statementStartOffset + errorOffset;
-        
-        let currentOffset = 0;
-        for (let i = 0; i < allLines.length; i++) {
-            const lineLength = allLines[i].length + 1; // +1 for newline
-            if (currentOffset + lineLength > absoluteErrorOffset) {
-                errorLine = i + 1; // 1-indexed
-                errorColumn = absoluteErrorOffset - currentOffset + 1; // 1-indexed
-                break;
-            }
-            currentOffset += lineLength;
-        }
-    }
-
-    // Build a detailed error message
-    let detailedError = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    detailedError += `SQL ERROR: ${errorMsg}\n`;
-    if (statementNumber > 0) {
-        detailedError += `Failed at statement #${statementNumber}\n`;
-    }
-    if (errorLine > 0) {
-        detailedError += `Location: Line ${errorLine}, Column ${errorColumn}\n`;
-    }
-    detailedError += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-
-    // Show the failing statement
-    if (allLines.length <= 25) {
-        // For short SQL, show the whole thing with line numbers
-        detailedError += statementNumber > 0
-            ? `Failing statement:\n`
-            : 'Your SQL:\n';
-        allLines.forEach((line, idx) => {
-            const lineNum = idx + 1;
-            const isErrorLine = lineNum === errorLine;
-            detailedError += `${lineNum.toString().padStart(4, ' ')} | ${line}\n`;
-
-            // Add pointer to error column if this is the error line
-            if (isErrorLine && errorColumn > 0) {
-                detailedError += `     | ${' '.repeat(errorColumn - 1)}^\n`;
-            }
-        });
-    } else {
-        // For long SQL, show context around the error
-        detailedError += statementNumber > 0
-            ? `Failing statement (showing error context in full file):\n`
-            : 'Your SQL (showing error context):\n';
-        
-        if (errorLine > 0) {
-            // Show from 3 lines before to 2 lines after the error
-            const startLine = Math.max(0, errorLine - 4); // -4 because errorLine is 1-indexed
-            const endLine = Math.min(errorLine + 2, allLines.length);
-            
-            if (startLine > 0) {
-                detailedError += `\n... (${startLine} lines before)\n\n`;
-            }
-            
-            for (let i = startLine; i < endLine; i++) {
-                const lineNum = i + 1;
-                const isErrorLine = lineNum === errorLine;
-                detailedError += `${lineNum.toString().padStart(4, ' ')} | ${allLines[i]}\n`;
-                
-                // Add pointer to error column if this is the error line
-                if (isErrorLine && errorColumn > 0) {
-                    detailedError += `     | ${' '.repeat(errorColumn - 1)}^\n`;
-                }
-            }
-            
-            if (endLine < allLines.length) {
-                detailedError += `\n... (${allLines.length - endLine} more lines)\n`;
-            }
-        } else {
-            // No error location, just show first few lines
-            detailedError += `The SQL contains ${allLines.length} lines.\n`;
-            detailedError += `Showing first 10 lines:\n\n`;
-            for (let i = 0; i < Math.min(10, allLines.length); i++) {
-                detailedError += `${(i + 1).toString().padStart(4, ' ')} | ${allLines[i]}\n`;
-            }
-            if (allLines.length > 10) {
-                detailedError += `\n... (${allLines.length - 10} more lines)\n`;
-            }
-        }
-    }
-
-    return detailedError;
 }
 
 /**
