@@ -1,17 +1,10 @@
 import { query } from '@livestore/solid'
-import { type Component, For } from 'solid-js'
+import { type Component, For, createEffect, onMount } from 'solid-js'
 
 import { uiState$ } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
 import { store } from '../livestore/store.ts'
-
-// Get the latest AoC year (current year if Nov/Dec, otherwise previous year)
-const getLatestAocYear = () => {
-  const now = new Date()
-  const month = now.getMonth() // 0-indexed: 10 = November, 11 = December
-  const year = now.getFullYear()
-  return month >= 10 ? year : year - 1
-}
+import { getLatestAocYear, parseUrlHash, updateUrlHash } from '../utils/url.ts'
 
 export const DaySelector: Component = () => {
   const latestYear = getLatestAocYear()
@@ -20,6 +13,24 @@ export const DaySelector: Component = () => {
   // Show 10 years starting from the latest AoC year
   const years = () => Array.from({ length: 10 }, (_, i) => latestYear - i)
   const days = () => Array.from({ length: 25 }, (_, i) => i + 1)
+
+  // On mount, read URL and update state if valid
+  onMount(() => {
+    const urlState = parseUrlHash()
+    if (urlState) {
+      store()?.commit(events.uiStateSet({
+        selectedYear: urlState.year,
+        selectedDay: urlState.day,
+        selectedPart: urlState.part,
+      }))
+    }
+  })
+
+  // Keep URL in sync with state changes
+  createEffect(() => {
+    const ui = uiState()
+    updateUrlHash(ui.selectedYear, ui.selectedDay, ui.selectedPart)
+  })
 
   const setYear = (year: number) => {
     store()?.commit(events.uiStateSet({ ...uiState(), selectedYear: year }))
