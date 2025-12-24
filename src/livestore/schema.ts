@@ -27,6 +27,24 @@ export const tables = {
       }),
     },
   }),
+  // Store expected outputs for test inputs (per input + part combination)
+  expectedOutputs: State.SQLite.table({
+    name: 'expectedOutputs',
+    columns: {
+      id: State.SQLite.text({ primaryKey: true }), // Format: "2024-01-test1-1" for input "2024-01-test1", part 1
+      inputId: State.SQLite.text({ default: '' }), // Reference to inputs.id
+      part: State.SQLite.integer({ default: 1 }), // 1 or 2
+      expectedOutput: State.SQLite.text({ default: '' }),
+      createdAt: State.SQLite.integer({
+        nullable: true,
+        schema: Schema.DateFromNumber,
+      }),
+      updatedAt: State.SQLite.integer({
+        nullable: true,
+        schema: Schema.DateFromNumber,
+      }),
+    },
+  }),
   // Store solutions (code snippets) for each puzzle
   solutions: State.SQLite.table({
     name: 'solutions',
@@ -97,6 +115,23 @@ export const events = {
       updatedAt: Schema.Date,
     }),
   }),
+  // Expected output events
+  expectedOutputSet: Events.synced({
+    name: 'v1.ExpectedOutputSet',
+    schema: Schema.Struct({
+      id: Schema.String,
+      inputId: Schema.String,
+      part: Schema.Literal(1, 2),
+      expectedOutput: Schema.String,
+      updatedAt: Schema.Date,
+    }),
+  }),
+  expectedOutputDeleted: Events.synced({
+    name: 'v1.ExpectedOutputDeleted',
+    schema: Schema.Struct({
+      id: Schema.String,
+    }),
+  }),
   // Solution events
   solutionCreated: Events.synced({
     name: 'v1.SolutionCreated',
@@ -136,6 +171,18 @@ const materializers = State.SQLite.materializers(events, {
   'v1.InputUpdated': ({ id, input, updatedAt }) =>
     tables.inputs.update({ input, updatedAt }).where({ id }),
   'v1.InputDeleted': ({ id }) => tables.inputs.delete().where({ id }),
+  'v1.ExpectedOutputSet': ({ id, inputId, part, expectedOutput, updatedAt }) =>
+    tables.expectedOutputs
+      .insert({
+        id,
+        inputId,
+        part,
+        expectedOutput,
+        updatedAt,
+      })
+      .onConflict('id', 'replace'),
+  'v1.ExpectedOutputDeleted': ({ id }) =>
+    tables.expectedOutputs.delete().where({ id }),
   'v1.SolutionCreated': ({ id, year, day, part, code, language, createdAt }) =>
     tables.solutions.insert({ id, year, day, part, code, language, createdAt }),
   'v1.SolutionUpdated': ({ id, code, updatedAt }) =>

@@ -10,6 +10,7 @@ import {
 
 import {
   currentDayInputs$,
+  currentExpectedOutput$,
   currentInput$,
   uiState$,
 } from '../livestore/queries.ts'
@@ -28,9 +29,12 @@ export const InputPanel: Component = () => {
   })
   const currentDayInputs = query(currentDayInputs$, [])
   const currentInputs = query(currentInput$, [])
+  const currentExpectedOutput = query(currentExpectedOutput$, [])
 
   const [localInput, setLocalInput] = createSignal('')
+  const [localExpectedOutput, setLocalExpectedOutput] = createSignal('')
   const [isDirty, setIsDirty] = createSignal(false)
+  const [isExpectedOutputDirty, setIsExpectedOutputDirty] = createSignal(false)
 
   // Sync local input with stored input when selection changes
   createEffect(() => {
@@ -41,6 +45,17 @@ export const InputPanel: Component = () => {
       setLocalInput('')
     }
     setIsDirty(false)
+  })
+
+  // Sync local expected output with stored expected output
+  createEffect(() => {
+    const outputs = currentExpectedOutput()
+    if (outputs && outputs.length > 0) {
+      setLocalExpectedOutput(outputs[0].expectedOutput)
+    } else {
+      setLocalExpectedOutput('')
+    }
+    setIsExpectedOutputDirty(false)
   })
 
   const saveInput = () => {
@@ -76,8 +91,32 @@ export const InputPanel: Component = () => {
     setIsDirty(false)
   }
 
+  const saveExpectedOutput = () => {
+    if (!isExpectedOutputDirty()) return
+
+    const ui = uiState()
+    const inputId = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}-${ui.selectedInputName}`
+    const id = `${inputId}-${ui.selectedPart}`
+    const now = new Date()
+
+    store()?.commit(
+      events.expectedOutputSet({
+        id,
+        inputId,
+        part: ui.selectedPart,
+        expectedOutput: localExpectedOutput(),
+        updatedAt: now,
+      }),
+    )
+    setIsExpectedOutputDirty(false)
+  }
+
   // Debounced auto-save
   const debouncedSave = debounce(saveInput, AUTOSAVE_DELAY)
+  const debouncedSaveExpectedOutput = debounce(
+    saveExpectedOutput,
+    AUTOSAVE_DELAY,
+  )
 
   // Auto-save when input changes
   createEffect(() => {
@@ -88,10 +127,21 @@ export const InputPanel: Component = () => {
     }
   })
 
+  // Auto-save when expected output changes
+  createEffect(() => {
+    localExpectedOutput()
+    if (isExpectedOutputDirty()) {
+      debouncedSaveExpectedOutput()
+    }
+  })
+
   // Save on unmount if dirty
   onCleanup(() => {
     if (isDirty()) {
       saveInput()
+    }
+    if (isExpectedOutputDirty()) {
+      saveExpectedOutput()
     }
   })
 
@@ -100,10 +150,18 @@ export const InputPanel: Component = () => {
     setIsDirty(true)
   }
 
+  const handleExpectedOutput = (value: string) => {
+    setLocalExpectedOutput(value)
+    setIsExpectedOutputDirty(true)
+  }
+
   const selectInput = (name: string) => {
     // Save current input before switching
     if (isDirty()) {
       saveInput()
+    }
+    if (isExpectedOutputDirty()) {
+      saveExpectedOutput()
     }
     store()?.commit(
       events.uiStateSet({ ...uiState(), selectedInputName: name }),
@@ -203,6 +261,21 @@ export const InputPanel: Component = () => {
         }
       />
       <div class="save-status">{isDirty() ? 'Saving...' : 'Saved'}</div>
+
+      <Show when={uiState().selectedInputName !== 'main'}>
+        <div class="expected-output-section">
+          <h3>Expected Output (Part {uiState().selectedPart})</h3>
+          <input
+            type="text"
+            value={localExpectedOutput()}
+            onInput={(e) => handleExpectedOutput(e.currentTarget.value)}
+            placeholder="Enter expected output for this test..."
+          />
+          <div class="save-status">
+            {isExpectedOutputDirty() ? 'Saving...' : 'Saved'}
+          </div>
+        </div>
+      </Show>
     </div>
   )
 }

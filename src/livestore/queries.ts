@@ -53,3 +53,14 @@ export const currentSolutions$ = queryDb(
   },
   { label: 'currentSolutions' },
 )
+
+// Get expected output for current input and part
+export const currentExpectedOutput$ = queryDb(
+  (get) => {
+    const ui = get(uiState$)
+    const inputId = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}-${ui.selectedInputName}`
+    const id = `${inputId}-${ui.selectedPart}`
+    return tables.expectedOutputs.where({ id })
+  },
+  { label: 'currentExpectedOutput' },
+)

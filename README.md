@@ -36,7 +36,7 @@ bun run preview
 - [x] year, day and part should be stored in the url
 - [x] inputs and solutions should automatically be saved and persisted across refreshes (use a debounce to save when the user stops typing).
 - [x] it should be possible to add more than one test input (in "saved inputs")
-- [ ] add an ability to add test inputs and expected outputs (test outputs will be different for each part of each day, but inputs may be shared)
+- [x] add an ability to add test inputs and expected outputs (test outputs will be different for each part of each day, but inputs may be shared)
 
 ## Future Plans
 

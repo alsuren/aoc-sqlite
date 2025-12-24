@@ -168,6 +168,37 @@ h1 {
   background: rgba(0, 204, 0, 0.1);
 }
 
+.expected-output-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #0f3460;
+}
+
+.expected-output-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.expected-output-section input[type="text"] {
+  width: 100%;
+  padding: 8px 12px;
+  background: #0d1b2a;
+  color: #ffcc00;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 14px;
+}
+
+.expected-output-section input[type="text"]:focus {
+  outline: none;
+  border-color: #ffcc00;
+}
+
 .part-tabs {
   display: flex;
   gap: 8px;
