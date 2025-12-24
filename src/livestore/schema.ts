@@ -8,13 +8,14 @@ import {
 
 // Schema for Advent of Code puzzle inputs and solutions
 export const tables = {
-  // Store puzzle inputs by year/day
+  // Store puzzle inputs by year/day/name (supports multiple inputs per day)
   inputs: State.SQLite.table({
     name: 'inputs',
     columns: {
-      id: State.SQLite.text({ primaryKey: true }), // Format: "2024-01" for year 2024, day 1
+      id: State.SQLite.text({ primaryKey: true }), // Format: "2024-01-main" for year 2024, day 1, name "main"
       year: State.SQLite.integer({ default: 2024 }),
       day: State.SQLite.integer({ default: 1 }),
+      name: State.SQLite.text({ default: 'main' }), // "main" for puzzle input, custom names for test inputs
       input: State.SQLite.text({ default: '' }),
       createdAt: State.SQLite.integer({
         nullable: true,
@@ -54,10 +55,16 @@ export const tables = {
       selectedYear: Schema.Number,
       selectedDay: Schema.Number,
       selectedPart: Schema.Literal(1, 2),
+      selectedInputName: Schema.String,
     }),
     default: {
       id: SessionIdSymbol,
-      value: { selectedYear: 2024, selectedDay: 1, selectedPart: 1 },
+      value: {
+        selectedYear: 2024,
+        selectedDay: 1,
+        selectedPart: 1,
+        selectedInputName: 'main',
+      },
     },
   }),
 }
@@ -71,8 +78,15 @@ export const events = {
       id: Schema.String,
       year: Schema.Number,
       day: Schema.Number,
+      name: Schema.String,
       input: Schema.String,
       createdAt: Schema.Date,
+    }),
+  }),
+  inputDeleted: Events.synced({
+    name: 'v1.InputDeleted',
+    schema: Schema.Struct({
+      id: Schema.String,
     }),
   }),
   inputUpdated: Events.synced({
@@ -117,10 +131,11 @@ export const events = {
 
 // Materializers map events to state
 const materializers = State.SQLite.materializers(events, {
-  'v1.InputCreated': ({ id, year, day, input, createdAt }) =>
-    tables.inputs.insert({ id, year, day, input, createdAt }),
+  'v1.InputCreated': ({ id, year, day, name, input, createdAt }) =>
+    tables.inputs.insert({ id, year, day, name, input, createdAt }),
   'v1.InputUpdated': ({ id, input, updatedAt }) =>
     tables.inputs.update({ input, updatedAt }).where({ id }),
+  'v1.InputDeleted': ({ id }) => tables.inputs.delete().where({ id }),
   'v1.SolutionCreated': ({ id, year, day, part, code, language, createdAt }) =>
     tables.solutions.insert({ id, year, day, part, code, language, createdAt }),
   'v1.SolutionUpdated': ({ id, code, updatedAt }) =>

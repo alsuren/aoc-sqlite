@@ -103,6 +103,71 @@ h1 {
   border-color: #00cc00;
 }
 
+.input-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.input-tab {
+  display: flex;
+  align-items: center;
+  background: #0d1b2a;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.input-tab.active {
+  border-color: #00cc00;
+}
+
+.input-tab .tab-btn {
+  padding: 6px 12px;
+  background: transparent;
+  color: #888;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.input-tab.active .tab-btn {
+  color: #00cc00;
+}
+
+.input-tab .delete-btn {
+  padding: 6px 8px;
+  background: transparent;
+  color: #666;
+  border: none;
+  border-left: 1px solid #0f3460;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.input-tab .delete-btn:hover {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.add-input-btn {
+  padding: 6px 12px;
+  background: #0d1b2a;
+  color: #00cc00;
+  border: 1px dashed #0f3460;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.add-input-btn:hover {
+  border-color: #00cc00;
+  background: rgba(0, 204, 0, 0.1);
+}
+
 .part-tabs {
   display: flex;
   gap: 8px;

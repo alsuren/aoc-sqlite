@@ -19,6 +19,7 @@ export const SolutionPanel: Component = () => {
     selectedYear: 2024,
     selectedDay: 1,
     selectedPart: 1 as const,
+    selectedInputName: 'main',
   })
   const currentSolutions = query(currentSolutions$, [])
 

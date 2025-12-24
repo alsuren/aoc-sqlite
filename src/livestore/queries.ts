@@ -21,11 +21,22 @@ export const solutions$ = queryDb(
   },
 )
 
-// Get input for currently selected day
+// Get all inputs for currently selected day
+export const currentDayInputs$ = queryDb(
+  (get) => {
+    const ui = get(uiState$)
+    return tables.inputs
+      .where({ year: ui.selectedYear, day: ui.selectedDay })
+      .orderBy('name', 'asc')
+  },
+  { label: 'currentDayInputs' },
+)
+
+// Get the currently selected input
 export const currentInput$ = queryDb(
   (get) => {
     const ui = get(uiState$)
-    const id = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}`
+    const id = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}-${ui.selectedInputName}`
     return tables.inputs.where({ id })
   },
   { label: 'currentInput' },

@@ -12,6 +12,7 @@ export const DaySelector: Component = () => {
     selectedYear: latestYear,
     selectedDay: 1,
     selectedPart: 1 as const,
+    selectedInputName: 'main',
   })
 
   // Show 10 years starting from the latest AoC year
@@ -27,6 +28,7 @@ export const DaySelector: Component = () => {
           selectedYear: urlState.year,
           selectedDay: urlState.day,
           selectedPart: urlState.part,
+          selectedInputName: 'main',
         }),
       )
     }

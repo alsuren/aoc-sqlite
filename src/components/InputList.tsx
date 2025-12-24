@@ -8,12 +8,13 @@ import { store } from '../livestore/store.ts'
 export const InputList: Component = () => {
   const inputs = query(inputs$, [])
 
-  const selectInput = (year: number, day: number) => {
+  const selectInput = (year: number, day: number, name: string) => {
     store()?.commit(
       events.uiStateSet({
         selectedYear: year,
         selectedDay: day,
         selectedPart: 1,
+        selectedInputName: name,
       }),
     )
   }
@@ -32,6 +33,7 @@ export const InputList: Component = () => {
             <tr>
               <th>Year</th>
               <th>Day</th>
+              <th>Name</th>
               <th>Input Preview</th>
               <th>Last Updated</th>
             </tr>
@@ -39,9 +41,12 @@ export const InputList: Component = () => {
           <tbody>
             <For each={inputs()}>
               {(input) => (
-                <tr onClick={() => selectInput(input.year, input.day)}>
+                <tr
+                  onClick={() => selectInput(input.year, input.day, input.name)}
+                >
                   <td>{input.year}</td>
                   <td>Day {input.day}</td>
+                  <td>{input.name}</td>
                   <td>
                     {input.input.substring(0, 50)}
                     {input.input.length > 50 ? '...' : ''}
