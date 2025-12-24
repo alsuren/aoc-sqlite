@@ -1,12 +1,16 @@
 import { query } from '@livestore/solid'
-import { type Component, createSignal, createEffect } from 'solid-js'
+import { type Component, createEffect, createSignal } from 'solid-js'
 
-import { uiState$, currentInput$ } from '../livestore/queries.ts'
+import { currentInput$, uiState$ } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
 import { store } from '../livestore/store.ts'
 
 export const InputPanel: Component = () => {
-  const uiState = query(uiState$, { selectedYear: 2024, selectedDay: 1, selectedPart: 1 as const })
+  const uiState = query(uiState$, {
+    selectedYear: 2024,
+    selectedDay: 1,
+    selectedPart: 1 as const,
+  })
   const currentInputs = query(currentInput$, [])
 
   const [localInput, setLocalInput] = createSignal('')
@@ -29,20 +33,24 @@ export const InputPanel: Component = () => {
 
     if (inputs && inputs.length > 0) {
       // Update existing
-      store()?.commit(events.inputUpdated({
-        id,
-        input: localInput(),
-        updatedAt: now,
-      }))
+      store()?.commit(
+        events.inputUpdated({
+          id,
+          input: localInput(),
+          updatedAt: now,
+        }),
+      )
     } else {
       // Create new
-      store()?.commit(events.inputCreated({
-        id,
-        year: ui.selectedYear,
-        day: ui.selectedDay,
-        input: localInput(),
-        createdAt: now,
-      }))
+      store()?.commit(
+        events.inputCreated({
+          id,
+          year: ui.selectedYear,
+          day: ui.selectedDay,
+          input: localInput(),
+          createdAt: now,
+        }),
+      )
     }
   }
 
@@ -54,7 +62,7 @@ export const InputPanel: Component = () => {
         onInput={(e) => setLocalInput(e.currentTarget.value)}
         placeholder="Paste your puzzle input here..."
       />
-      <button class="save-btn" onClick={saveInput}>
+      <button type="button" class="save-btn" onClick={saveInput}>
         Save Input
       </button>
     </div>

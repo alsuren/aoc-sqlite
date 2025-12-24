@@ -1,12 +1,16 @@
 import { query } from '@livestore/solid'
-import { type Component, createSignal, createEffect, Show } from 'solid-js'
+import { type Component, createEffect, createSignal, Show } from 'solid-js'
 
-import { uiState$, currentSolutions$ } from '../livestore/queries.ts'
+import { currentSolutions$, uiState$ } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
 import { store } from '../livestore/store.ts'
 
 export const SolutionPanel: Component = () => {
-  const uiState = query(uiState$, { selectedYear: 2024, selectedDay: 1, selectedPart: 1 as const })
+  const uiState = query(uiState$, {
+    selectedYear: 2024,
+    selectedDay: 1,
+    selectedPart: 1 as const,
+  })
   const currentSolutions = query(currentSolutions$, [])
 
   const [localCode, setLocalCode] = createSignal('')
@@ -14,7 +18,7 @@ export const SolutionPanel: Component = () => {
   // Get solution for current part
   const currentSolution = () => {
     const solutions = currentSolutions()
-    return solutions?.find(s => s.part === uiState().selectedPart)
+    return solutions?.find((s) => s.part === uiState().selectedPart)
   }
 
   // Sync local code with stored solution when selection changes
@@ -39,22 +43,26 @@ export const SolutionPanel: Component = () => {
 
     if (solution) {
       // Update existing
-      store()?.commit(events.solutionUpdated({
-        id,
-        code: localCode(),
-        updatedAt: now,
-      }))
+      store()?.commit(
+        events.solutionUpdated({
+          id,
+          code: localCode(),
+          updatedAt: now,
+        }),
+      )
     } else {
       // Create new
-      store()?.commit(events.solutionCreated({
-        id,
-        year: ui.selectedYear,
-        day: ui.selectedDay,
-        part: ui.selectedPart,
-        code: localCode(),
-        language: 'sql',
-        createdAt: now,
-      }))
+      store()?.commit(
+        events.solutionCreated({
+          id,
+          year: ui.selectedYear,
+          day: ui.selectedDay,
+          part: ui.selectedPart,
+          code: localCode(),
+          language: 'sql',
+          createdAt: now,
+        }),
+      )
     }
   }
 
@@ -63,12 +71,14 @@ export const SolutionPanel: Component = () => {
       <h2>💻 Solution - Day {uiState().selectedDay}</h2>
       <div class="part-tabs">
         <button
+          type="button"
           class={uiState().selectedPart === 1 ? 'active' : ''}
           onClick={() => setPart(1)}
         >
           Part 1
         </button>
         <button
+          type="button"
           class={uiState().selectedPart === 2 ? 'active' : ''}
           onClick={() => setPart(2)}
         >
@@ -80,7 +90,7 @@ export const SolutionPanel: Component = () => {
         onInput={(e) => setLocalCode(e.currentTarget.value)}
         placeholder="Write your SQL solution here..."
       />
-      <button class="save-btn" onClick={saveSolution}>
+      <button type="button" class="save-btn" onClick={saveSolution}>
         Save Solution
       </button>
       <Show when={currentSolution()?.result}>

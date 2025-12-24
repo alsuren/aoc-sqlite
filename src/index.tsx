@@ -12,4 +12,5 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   )
 }
 
+// biome-ignore lint/style/noNonNullAssertion: root is checked above in dev mode
 render(() => <App />, root!)

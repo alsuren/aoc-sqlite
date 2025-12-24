@@ -1,4 +1,10 @@
-import { Events, makeSchema, Schema, SessionIdSymbol, State } from '@livestore/livestore'
+import {
+  Events,
+  makeSchema,
+  Schema,
+  SessionIdSymbol,
+  State,
+} from '@livestore/livestore'
 
 // Schema for Advent of Code puzzle inputs and solutions
 export const tables = {
@@ -10,8 +16,14 @@ export const tables = {
       year: State.SQLite.integer({ default: 2024 }),
       day: State.SQLite.integer({ default: 1 }),
       input: State.SQLite.text({ default: '' }),
-      createdAt: State.SQLite.integer({ nullable: true, schema: Schema.DateFromNumber }),
-      updatedAt: State.SQLite.integer({ nullable: true, schema: Schema.DateFromNumber }),
+      createdAt: State.SQLite.integer({
+        nullable: true,
+        schema: Schema.DateFromNumber,
+      }),
+      updatedAt: State.SQLite.integer({
+        nullable: true,
+        schema: Schema.DateFromNumber,
+      }),
     },
   }),
   // Store solutions (code snippets) for each puzzle
@@ -25,8 +37,14 @@ export const tables = {
       code: State.SQLite.text({ default: '' }),
       language: State.SQLite.text({ default: 'sql' }), // For future: sql, python, etc.
       result: State.SQLite.text({ nullable: true }), // Cached result from execution
-      createdAt: State.SQLite.integer({ nullable: true, schema: Schema.DateFromNumber }),
-      updatedAt: State.SQLite.integer({ nullable: true, schema: Schema.DateFromNumber }),
+      createdAt: State.SQLite.integer({
+        nullable: true,
+        schema: Schema.DateFromNumber,
+      }),
+      updatedAt: State.SQLite.integer({
+        nullable: true,
+        schema: Schema.DateFromNumber,
+      }),
     },
   }),
   // Client-only UI state
@@ -37,7 +55,10 @@ export const tables = {
       selectedDay: Schema.Number,
       selectedPart: Schema.Literal(1, 2),
     }),
-    default: { id: SessionIdSymbol, value: { selectedYear: 2024, selectedDay: 1, selectedPart: 1 } },
+    default: {
+      id: SessionIdSymbol,
+      value: { selectedYear: 2024, selectedDay: 1, selectedPart: 1 },
+    },
   }),
 }
 

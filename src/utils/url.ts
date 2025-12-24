@@ -17,15 +17,15 @@ export const parseUrlHash = (): UrlState | null => {
   const hash = window.location.hash
   const match = hash.match(/^#\/(\d{4})\/(\d{1,2})\/([12])$/)
   if (!match) return null
-  
+
   const year = parseInt(match[1], 10)
   const day = parseInt(match[2], 10)
   const part = parseInt(match[3], 10) as 1 | 2
-  
+
   // Validate ranges
   if (year < 2015 || year > getLatestAocYear()) return null
   if (day < 1 || day > 25) return null
-  
+
   return { year, day, part }
 }
 

@@ -1,5 +1,5 @@
 import { query } from '@livestore/solid'
-import { type Component, For, createEffect, onMount } from 'solid-js'
+import { type Component, createEffect, For, onMount } from 'solid-js'
 
 import { uiState$ } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
@@ -8,7 +8,11 @@ import { getLatestAocYear, parseUrlHash, updateUrlHash } from '../utils/url.ts'
 
 export const DaySelector: Component = () => {
   const latestYear = getLatestAocYear()
-  const uiState = query(uiState$, { selectedYear: latestYear, selectedDay: 1, selectedPart: 1 as const })
+  const uiState = query(uiState$, {
+    selectedYear: latestYear,
+    selectedDay: 1,
+    selectedPart: 1 as const,
+  })
 
   // Show 10 years starting from the latest AoC year
   const years = () => Array.from({ length: 10 }, (_, i) => latestYear - i)
@@ -18,11 +22,13 @@ export const DaySelector: Component = () => {
   onMount(() => {
     const urlState = parseUrlHash()
     if (urlState) {
-      store()?.commit(events.uiStateSet({
-        selectedYear: urlState.year,
-        selectedDay: urlState.day,
-        selectedPart: urlState.part,
-      }))
+      store()?.commit(
+        events.uiStateSet({
+          selectedYear: urlState.year,
+          selectedDay: urlState.day,
+          selectedPart: urlState.part,
+        }),
+      )
     }
   })
 
@@ -44,7 +50,7 @@ export const DaySelector: Component = () => {
     <div class="day-selector">
       <select
         value={uiState().selectedYear}
-        onChange={(e) => setYear(parseInt(e.currentTarget.value))}
+        onChange={(e) => setYear(Number.parseInt(e.currentTarget.value, 10))}
       >
         <For each={years()}>
           {(year) => <option value={year}>{year}</option>}
@@ -52,7 +58,7 @@ export const DaySelector: Component = () => {
       </select>
       <select
         value={uiState().selectedDay}
-        onChange={(e) => setDay(parseInt(e.currentTarget.value))}
+        onChange={(e) => setDay(Number.parseInt(e.currentTarget.value, 10))}
       >
         <For each={days()}>
           {(day) => <option value={day}>Day {day}</option>}

@@ -9,19 +9,23 @@ export const InputList: Component = () => {
   const inputs = query(inputs$, [])
 
   const selectInput = (year: number, day: number) => {
-    store()?.commit(events.uiStateSet({
-      selectedYear: year,
-      selectedDay: day,
-      selectedPart: 1,
-    }))
+    store()?.commit(
+      events.uiStateSet({
+        selectedYear: year,
+        selectedDay: day,
+        selectedPart: 1,
+      }),
+    )
   }
 
   return (
     <div class="input-list">
       <h2>📋 Saved Inputs</h2>
       <Show
-        when={inputs() && inputs()!.length > 0}
-        fallback={<p>No inputs saved yet. Paste your first puzzle input above!</p>}
+        when={inputs()?.length}
+        fallback={
+          <p>No inputs saved yet. Paste your first puzzle input above!</p>
+        }
       >
         <table>
           <thead>
@@ -38,7 +42,10 @@ export const InputList: Component = () => {
                 <tr onClick={() => selectInput(input.year, input.day)}>
                   <td>{input.year}</td>
                   <td>Day {input.day}</td>
-                  <td>{input.input.substring(0, 50)}{input.input.length > 50 ? '...' : ''}</td>
+                  <td>
+                    {input.input.substring(0, 50)}
+                    {input.input.length > 50 ? '...' : ''}
+                  </td>
                   <td>
                     {input.updatedAt
                       ? new Date(input.updatedAt).toLocaleDateString()
