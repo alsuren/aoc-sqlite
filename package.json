@@ -1,0 +1,30 @@
+{
+  "name": "aoc-livestore",
+  "version": "0.0.1",
+  "description": "Advent of Code solution tracker with LiveStore + SolidJS",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "vite"
+  },
+  "dependencies": {
+    "@livestore/adapter-web": "0.3.1",
+    "@livestore/livestore": "0.3.1",
+    "@livestore/peer-deps": "0.3.1",
+    "@livestore/solid": "0.3.1",
+    "@livestore/wa-sqlite": "1.0.5-dev.2",
+    "solid-js": "1.9.4"
+  },
+  "devDependencies": {
+    "@livestore/devtools-vite": "^0.3.1",
+    "solid-devtools": "^0.33.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.4",
+    "vite-plugin-solid": "^2.11.6"
+  },
+  "engines": {
+    "node": ">=23.0.0"
+  }
+}
