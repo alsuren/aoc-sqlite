@@ -1,9 +1,12 @@
 import { query } from '@livestore/solid'
-import { type Component, createEffect, createSignal } from 'solid-js'
+import { type Component, createEffect, createSignal, onCleanup } from 'solid-js'
 
 import { currentInput$, uiState$ } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
 import { store } from '../livestore/store.ts'
+import { debounce } from '../utils/debounce.ts'
+
+const AUTOSAVE_DELAY = 500 // ms
 
 export const InputPanel: Component = () => {
   const uiState = query(uiState$, {
@@ -14,6 +17,7 @@ export const InputPanel: Component = () => {
   const currentInputs = query(currentInput$, [])
 
   const [localInput, setLocalInput] = createSignal('')
+  const [isDirty, setIsDirty] = createSignal(false)
 
   // Sync local input with stored input when selection changes
   createEffect(() => {
@@ -23,9 +27,12 @@ export const InputPanel: Component = () => {
     } else {
       setLocalInput('')
     }
+    setIsDirty(false)
   })
 
   const saveInput = () => {
+    if (!isDirty()) return
+
     const ui = uiState()
     const id = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}`
     const inputs = currentInputs()
@@ -52,6 +59,31 @@ export const InputPanel: Component = () => {
         }),
       )
     }
+    setIsDirty(false)
+  }
+
+  // Debounced auto-save
+  const debouncedSave = debounce(saveInput, AUTOSAVE_DELAY)
+
+  // Auto-save when input changes
+  createEffect(() => {
+    // Track localInput to trigger effect
+    localInput()
+    if (isDirty()) {
+      debouncedSave()
+    }
+  })
+
+  // Save on unmount if dirty
+  onCleanup(() => {
+    if (isDirty()) {
+      saveInput()
+    }
+  })
+
+  const handleInput = (value: string) => {
+    setLocalInput(value)
+    setIsDirty(true)
   }
 
   return (
@@ -59,12 +91,10 @@ export const InputPanel: Component = () => {
       <h2>📥 Puzzle Input - Day {uiState().selectedDay}</h2>
       <textarea
         value={localInput()}
-        onInput={(e) => setLocalInput(e.currentTarget.value)}
+        onInput={(e) => handleInput(e.currentTarget.value)}
         placeholder="Paste your puzzle input here..."
       />
-      <button type="button" class="save-btn" onClick={saveInput}>
-        Save Input
-      </button>
+      <div class="save-status">{isDirty() ? 'Saving...' : 'Saved'}</div>
     </div>
   )
 }

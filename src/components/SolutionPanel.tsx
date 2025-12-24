@@ -1,9 +1,18 @@
 import { query } from '@livestore/solid'
-import { type Component, createEffect, createSignal, Show } from 'solid-js'
+import {
+  type Component,
+  createEffect,
+  createSignal,
+  onCleanup,
+  Show,
+} from 'solid-js'
 
 import { currentSolutions$, uiState$ } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
 import { store } from '../livestore/store.ts'
+import { debounce } from '../utils/debounce.ts'
+
+const AUTOSAVE_DELAY = 500
 
 export const SolutionPanel: Component = () => {
   const uiState = query(uiState$, {
@@ -14,6 +23,7 @@ export const SolutionPanel: Component = () => {
   const currentSolutions = query(currentSolutions$, [])
 
   const [localCode, setLocalCode] = createSignal('')
+  const [isDirty, setIsDirty] = createSignal(false)
 
   // Get solution for current part
   const currentSolution = () => {
@@ -29,13 +39,20 @@ export const SolutionPanel: Component = () => {
     } else {
       setLocalCode('')
     }
+    setIsDirty(false)
   })
 
   const setPart = (part: 1 | 2) => {
+    // Save before switching parts if dirty
+    if (isDirty()) {
+      saveSolution()
+    }
     store()?.commit(events.uiStateSet({ ...uiState(), selectedPart: part }))
   }
 
   const saveSolution = () => {
+    if (!isDirty()) return
+
     const ui = uiState()
     const id = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}-${ui.selectedPart}`
     const solution = currentSolution()
@@ -64,6 +81,31 @@ export const SolutionPanel: Component = () => {
         }),
       )
     }
+    setIsDirty(false)
+  }
+
+  // Debounced auto-save
+  const debouncedSave = debounce(() => {
+    saveSolution()
+  }, AUTOSAVE_DELAY)
+
+  // Trigger auto-save when code changes
+  createEffect(() => {
+    if (isDirty()) {
+      debouncedSave()
+    }
+  })
+
+  // Save on unmount if dirty
+  onCleanup(() => {
+    if (isDirty()) {
+      saveSolution()
+    }
+  })
+
+  const handleCodeInput = (value: string) => {
+    setLocalCode(value)
+    setIsDirty(true)
   }
 
   return (
@@ -87,12 +129,10 @@ export const SolutionPanel: Component = () => {
       </div>
       <textarea
         value={localCode()}
-        onInput={(e) => setLocalCode(e.currentTarget.value)}
+        onInput={(e) => handleCodeInput(e.currentTarget.value)}
         placeholder="Write your SQL solution here..."
       />
-      <button type="button" class="save-btn" onClick={saveSolution}>
-        Save Solution
-      </button>
+      <div class="save-status">{isDirty() ? 'Saving...' : 'Saved'}</div>
       <Show when={currentSolution()?.result}>
         <div class="result-panel">
           <h3>Result</h3>

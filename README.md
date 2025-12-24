@@ -34,7 +34,7 @@ bun run preview
 
 - [x] when deciding which years to render, we should include the current year if we are in November or December of that year.
 - [x] year, day and part should be stored in the url
-- [ ] inputs and solutions should automatically be saved and persisted across refreshes (use a debounce to save when the user stops typing).
+- [x] inputs and solutions should automatically be saved and persisted across refreshes (use a debounce to save when the user stops typing).
 - [ ] it should be possible to add more than one test input (in "saved inputs")
 - [ ] add an ability to add test inputs and expected outputs (test outputs will be different for each part of each day, but inputs may be shared)
 
