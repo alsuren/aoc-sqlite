@@ -19,3 +19,11 @@ if [ $? -ne 0 ]; then
   echo "TypeScript errors found. Please fix them before committing."
   exit 1
 fi
+
+# Run tests
+echo "Running tests..."
+bun test
+if [ $? -ne 0 ]; then
+  echo "Tests failed. Please fix them before committing."
+  exit 1
+fi
