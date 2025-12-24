@@ -137,6 +137,56 @@ h1 {
   color: #00cc00;
 }
 
+/* Test status colors */
+.input-tab.test-running {
+  border-color: #888;
+  animation: pulse 1s infinite;
+}
+
+.input-tab.test-pass {
+  border-color: #00cc00;
+  background: rgba(0, 204, 0, 0.15);
+}
+
+.input-tab.test-pass .tab-btn {
+  color: #00cc00;
+}
+
+.input-tab.test-fail {
+  border-color: #ffcc00;
+  background: rgba(255, 204, 0, 0.15);
+}
+
+.input-tab.test-fail .tab-btn {
+  color: #ffcc00;
+}
+
+.input-tab.test-error {
+  border-color: #ff4444;
+  background: rgba(255, 68, 68, 0.15);
+}
+
+.input-tab.test-error .tab-btn {
+  color: #ff4444;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.testing-indicator {
+  font-size: 11px;
+  font-weight: normal;
+  margin-left: 8px;
+  color: #888;
+}
+
 .input-tab .delete-btn {
   padding: 6px 8px;
   background: transparent;

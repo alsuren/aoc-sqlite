@@ -22,9 +22,9 @@ const pendingRequests = new Map<
 >()
 
 function getWorker(): { worker: Worker; ready: Promise<void> } {
-  if (!worker) {
-    let resolveInit: () => void
-    let rejectInit: (error: Error) => void
+  if (!worker || !initPromise) {
+    let resolveInit: () => void = () => {}
+    let rejectInit: (error: Error) => void = () => {}
     initPromise = new Promise((resolve, reject) => {
       resolveInit = resolve
       rejectInit = reject
@@ -67,7 +67,7 @@ function getWorker(): { worker: Worker; ready: Promise<void> } {
       rejectInit(new Error('Worker error'))
     }
   }
-  return { worker, ready: initPromise! }
+  return { worker, ready: initPromise }
 }
 
 /**

@@ -8,6 +8,7 @@ import {
   Show,
 } from 'solid-js'
 
+import { useTestContext } from '../contexts/TestContext.tsx'
 import {
   currentDayInputs$,
   currentExpectedOutput$,
@@ -30,6 +31,8 @@ export const InputPanel: Component = () => {
   const currentDayInputs = query(currentDayInputs$, [])
   const currentInputs = query(currentInput$, [])
   const currentExpectedOutput = query(currentExpectedOutput$, [])
+
+  const { getStatusForInput, isRunning: isTestsRunning } = useTestContext()
 
   const [localInput, setLocalInput] = createSignal('')
   const [localExpectedOutput, setLocalExpectedOutput] = createSignal('')
@@ -201,15 +204,38 @@ export const InputPanel: Component = () => {
     }
   }
 
+  // Get CSS class for test status
+  const getStatusClass = (inputName: string) => {
+    const status = getStatusForInput(inputName)
+    if (!status) return ''
+    switch (status) {
+      case 'running':
+        return 'test-running'
+      case 'pass':
+        return 'test-pass'
+      case 'fail':
+        return 'test-fail'
+      case 'error':
+        return 'test-error'
+      default:
+        return ''
+    }
+  }
+
   return (
     <div class="panel">
-      <h2>📥 Puzzle Input - Day {uiState().selectedDay}</h2>
+      <h2>
+        📥 Puzzle Input - Day {uiState().selectedDay}
+        <Show when={isTestsRunning()}>
+          <span class="testing-indicator">⏳ Testing...</span>
+        </Show>
+      </h2>
 
       <div class="input-tabs">
         <For each={currentDayInputs()}>
           {(input) => (
             <div
-              class={`input-tab ${uiState().selectedInputName === input.name ? 'active' : ''}`}
+              class={`input-tab ${uiState().selectedInputName === input.name ? 'active' : ''} ${getStatusClass(input.name)}`}
             >
               <button
                 type="button"

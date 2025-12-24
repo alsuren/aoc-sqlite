@@ -92,4 +92,46 @@ SELECT 1.0, COUNT(*) FROM input_data;
     // And final result
     await expect(page.locator('.final-result')).toContainText('5')
   })
+
+  test('should auto-run tests on save and color tabs', async ({ page }) => {
+    await page.goto('/')
+
+    // Wait for app to load
+    await expect(page.locator('h1')).toContainText('Advent of Code')
+
+    // Add main input
+    const inputTextarea = page.locator('.panel textarea').first()
+    await inputTextarea.fill('1\n2\n3')
+    await page.waitForTimeout(600)
+
+    // Add a test input by clicking +
+    await page.locator('.add-input-btn').click()
+    await page.waitForTimeout(100)
+
+    // Fill test input
+    await inputTextarea.fill('a\nb')
+    await page.waitForTimeout(100)
+
+    // Set expected output
+    const expectedInput = page.locator('.expected-output-section input')
+    await expectedInput.fill('2')
+    await page.waitForTimeout(600)
+
+    // Write a SQL solution that counts lines
+    const solutionTextarea = page.locator('.panel textarea').nth(1)
+    await solutionTextarea.fill(`
+INSERT INTO output (progress, result)
+SELECT 1.0, COUNT(*) FROM input_data;
+`)
+
+    // Wait for auto-save to trigger tests
+    await page.waitForTimeout(1000)
+
+    // The test1 input tab should turn green (pass) since COUNT(*) = 2 matches expected "2"
+    await expect(
+      page.locator('.input-tab.test-pass').filter({ hasText: 'test1' }),
+    ).toBeVisible({
+      timeout: 10000,
+    })
+  })
 })

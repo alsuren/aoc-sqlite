@@ -8,7 +8,10 @@ import {
   Show,
 } from 'solid-js'
 
+import { useTestContext } from '../contexts/TestContext.tsx'
 import {
+  currentDayExpectedOutputs$,
+  currentDayInputs$,
   currentExpectedOutput$,
   currentInput$,
   currentSolutions$,
@@ -31,6 +34,10 @@ export const SolutionPanel: Component = () => {
   const currentSolutions = query(currentSolutions$, [])
   const currentInput = query(currentInput$, [])
   const currentExpectedOutput = query(currentExpectedOutput$, [])
+  const currentDayInputs = query(currentDayInputs$, [])
+  const currentDayExpectedOutputs = query(currentDayExpectedOutputs$, [])
+
+  const { runTests } = useTestContext()
 
   const [localCode, setLocalCode] = createSignal('')
   const [isDirty, setIsDirty] = createSignal(false)
@@ -94,6 +101,37 @@ export const SolutionPanel: Component = () => {
       )
     }
     setIsDirty(false)
+
+    // Run all tests after saving
+    runAllInputTests()
+  }
+
+  // Run tests for all inputs
+  const runAllInputTests = () => {
+    const code = localCode()
+    if (!code.trim()) return
+
+    const ui = uiState()
+    const inputs = currentDayInputs()
+    if (!inputs || inputs.length === 0) return
+
+    // Build expected outputs map for current day inputs
+    const expectedOutputsMap = new Map<string, string>()
+    const dayPrefix = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}-`
+    for (const output of currentDayExpectedOutputs() || []) {
+      // output.inputId is like "2024-01-test1", we want just "test1"
+      if (output.inputId.startsWith(dayPrefix)) {
+        const inputName = output.inputId.slice(dayPrefix.length)
+        expectedOutputsMap.set(inputName, output.expectedOutput)
+      }
+    }
+
+    // Run tests
+    runTests(
+      code,
+      inputs.map((i) => ({ name: i.name, input: i.input })),
+      expectedOutputsMap,
+    )
   }
 
   // Debounced auto-save

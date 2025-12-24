@@ -64,3 +64,14 @@ export const currentExpectedOutput$ = queryDb(
   },
   { label: 'currentExpectedOutput' },
 )
+
+// Get all expected outputs for current day and part
+export const currentDayExpectedOutputs$ = queryDb(
+  (get) => {
+    const ui = get(uiState$)
+    return tables.expectedOutputs.where({
+      part: ui.selectedPart,
+    })
+  },
+  { label: 'currentDayExpectedOutputs' },
+)
