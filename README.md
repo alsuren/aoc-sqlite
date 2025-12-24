@@ -30,6 +30,13 @@ bun run build
 bun run preview
 ```
 
+## Bugs to fix
+
+- [ ] when deciding which years to render, we should include the current year if we are in November or December of that year.
+- [ ] inputs and solutions should automatically be saved and persisted across refreshes (use a debounce to save when the user stops typing).
+- [ ] it should be possible to add more than one test input (in "saved inputs")
+- [ ] add an ability to add test inputs and expected outputs (test outputs will be different for each part of each day, but inputs may be shared)
+
 ## Future Plans
 
 - [ ] Execute SQL solutions against puzzle inputs in SQLite
