@@ -14,20 +14,32 @@ export interface SQLResult {
 }
 
 let worker: Worker | null = null
+let initPromise: Promise<void> | null = null
 let requestId = 0
 const pendingRequests = new Map<
   number,
   { resolve: (value: SQLResult) => void; reject: (error: Error) => void }
 >()
 
-function getWorker(): Worker {
+function getWorker(): { worker: Worker; ready: Promise<void> } {
   if (!worker) {
+    let resolveInit: () => void
+    let rejectInit: (error: Error) => void
+    initPromise = new Promise((resolve, reject) => {
+      resolveInit = resolve
+      rejectInit = reject
+    })
+
     worker = new SQLRunnerWorker()
     worker.onmessage = (event) => {
       const response = event.data
       if (response.type === 'ready') {
         // Worker is ready, initialize SQLite
         const id = ++requestId
+        pendingRequests.set(id, {
+          resolve: () => resolveInit(),
+          reject: rejectInit,
+        })
         worker?.postMessage({ type: 'init', id })
         return
       }
@@ -52,9 +64,10 @@ function getWorker(): Worker {
     }
     worker.onerror = (event) => {
       console.error('SQL Runner worker error:', event)
+      rejectInit(new Error('Worker error'))
     }
   }
-  return worker
+  return { worker, ready: initPromise! }
 }
 
 /**
@@ -67,7 +80,11 @@ export async function executeSQL(
   sql: string,
   input: string,
 ): Promise<SQLResult> {
-  const w = getWorker()
+  const { worker: w, ready } = getWorker()
+
+  // Wait for worker to be initialized
+  await ready
+
   const id = ++requestId
 
   return new Promise((resolve, reject) => {
