@@ -3,14 +3,21 @@ import {
   type Component,
   createEffect,
   createSignal,
+  For,
   onCleanup,
   Show,
 } from 'solid-js'
 
-import { currentSolutions$, uiState$ } from '../livestore/queries.ts'
+import {
+  currentExpectedOutput$,
+  currentInput$,
+  currentSolutions$,
+  uiState$,
+} from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
 import { store } from '../livestore/store.ts'
 import { debounce } from '../utils/debounce.ts'
+import { executeSQL, type SQLResult } from '../utils/sql-runner.ts'
 
 const AUTOSAVE_DELAY = 500
 
@@ -22,9 +29,13 @@ export const SolutionPanel: Component = () => {
     selectedInputName: 'main',
   })
   const currentSolutions = query(currentSolutions$, [])
+  const currentInput = query(currentInput$, [])
+  const currentExpectedOutput = query(currentExpectedOutput$, [])
 
   const [localCode, setLocalCode] = createSignal('')
   const [isDirty, setIsDirty] = createSignal(false)
+  const [isRunning, setIsRunning] = createSignal(false)
+  const [runResult, setRunResult] = createSignal<SQLResult | null>(null)
 
   // Get solution for current part
   const currentSolution = () => {
@@ -109,6 +120,53 @@ export const SolutionPanel: Component = () => {
     setIsDirty(true)
   }
 
+  const runSolution = async () => {
+    const input = currentInput()
+    if (!input || input.length === 0) {
+      setRunResult({
+        success: false,
+        error: 'No input data. Please add puzzle input first.',
+      })
+      return
+    }
+
+    setIsRunning(true)
+    setRunResult(null)
+
+    try {
+      const result = await executeSQL(localCode(), input[0].input)
+      setRunResult(result)
+
+      // If successful with a final result, save it to the solution
+      if (result.success && result.result !== undefined) {
+        const ui = uiState()
+        const id = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}-${ui.selectedPart}`
+        store()?.commit(events.solutionResultSet({ id, result: result.result }))
+      }
+    } catch (error) {
+      setRunResult({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    } finally {
+      setIsRunning(false)
+    }
+  }
+
+  // Get expected output for comparison
+  const expectedOutput = () => {
+    const outputs = currentExpectedOutput()
+    return outputs && outputs.length > 0 ? outputs[0].expectedOutput : null
+  }
+
+  // Check if result matches expected output
+  const resultMatches = () => {
+    const expected = expectedOutput()
+    const result = runResult()
+    if (!expected || !result?.result) return null
+    return result.result.trim() === expected.trim()
+  }
+
   return (
     <div class="panel">
       <h2>💻 Solution - Day {uiState().selectedDay}</h2>
@@ -133,13 +191,70 @@ export const SolutionPanel: Component = () => {
         onInput={(e) => handleCodeInput(e.currentTarget.value)}
         placeholder="Write your SQL solution here..."
       />
-      <div class="save-status">{isDirty() ? 'Saving...' : 'Saved'}</div>
-      <Show when={currentSolution()?.result}>
-        <div class="result-panel">
-          <h3>Result</h3>
-          <pre>{currentSolution()?.result}</pre>
-        </div>
+      <div class="solution-actions">
+        <div class="save-status">{isDirty() ? 'Saving...' : 'Saved'}</div>
+        <button
+          type="button"
+          class="run-btn"
+          onClick={runSolution}
+          disabled={isRunning() || !localCode()}
+        >
+          {isRunning() ? '⏳ Running...' : '▶️ Run'}
+        </button>
+      </div>
+
+      <Show when={runResult()}>
+        {(result) => (
+          <div
+            class={`result-panel ${result().success ? 'success' : 'error'} ${resultMatches() === true ? 'matches' : resultMatches() === false ? 'mismatch' : ''}`}
+          >
+            <h3>
+              {result().success ? '✅ Result' : '❌ Error'}
+              <Show when={resultMatches() === true}>
+                <span class="match-badge">✓ Matches expected</span>
+              </Show>
+              <Show when={resultMatches() === false}>
+                <span class="mismatch-badge">✗ Does not match expected</span>
+              </Show>
+            </h3>
+            <Show when={result().error}>
+              <pre class="error-output">{result().error}</pre>
+            </Show>
+            <Show when={(result().debugRows?.length ?? 0) > 0}>
+              <div class="debug-rows">
+                <h4>Debug Output</h4>
+                <For each={result().debugRows}>
+                  {(row) => (
+                    <div class="debug-row">
+                      <span class="progress">
+                        {Math.round(row.progress * 100)}%
+                      </span>
+                      <span class="debug-result">{row.result}</span>
+                    </div>
+                  )}
+                </For>
+              </div>
+            </Show>
+            <Show when={result().result !== undefined}>
+              <div class="final-result">
+                <strong>Answer:</strong> {result().result}
+              </div>
+              <Show when={expectedOutput()}>
+                <div class="expected-result">
+                  <strong>Expected:</strong> {expectedOutput()}
+                </div>
+              </Show>
+            </Show>
+          </div>
+        )}
       </Show>
+
+      <div class="input-info">
+        Running against: <strong>{uiState().selectedInputName}</strong> input
+        <Show when={!currentInput() || currentInput().length === 0}>
+          <span class="warning"> (no input data)</span>
+        </Show>
+      </div>
     </div>
   )
 }

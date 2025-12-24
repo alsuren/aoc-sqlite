@@ -10,9 +10,26 @@ A web app for tracking and sharing Advent of Code solutions, built with:
 
 - 📥 Store puzzle inputs for each day
 - 💻 Write and save solutions (SQL initially, more languages later)
+- ▶️ Execute SQL solutions against puzzle inputs in an isolated SQLite instance
 - 🔄 Automatic sync across tabs/devices via LiveStore
 - 📋 List all saved inputs for quick navigation
 - 🎨 AoC-themed dark UI
+- ✅ Test inputs with expected outputs - see if your solution matches
+
+## SQL Solution Format
+
+Your SQL solutions should:
+1. Read from `input_data` table (one row per line of input, column named `line`)
+2. Write results to `output` table with columns `progress` (REAL) and `result` (TEXT)
+
+Example solution:
+```sql
+-- Count lines in input
+INSERT INTO output (progress, result)
+SELECT 1.0, COUNT(*) FROM input_data;
+```
+
+Use `progress < 1.0` for debug output that shows intermediate results:
 
 ## Getting Started
 
@@ -40,8 +57,8 @@ bun run preview
 
 ## Future Plans
 
-- [ ] Execute SQL solutions against puzzle inputs in SQLite
-- [ ] Display solution results below the editor
+- [x] Execute SQL solutions against puzzle inputs in SQLite
+- [x] Display solution results below the editor
 - [ ] Share solutions with others via sync
 - [ ] Import/export functionality
 

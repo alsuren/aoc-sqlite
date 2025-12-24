@@ -41,15 +41,6 @@ describe('Expected output behavior', () => {
   })
 
   describe('Schema event structure', () => {
-    // Based on schema.ts - ExpectedOutputSet event
-    interface ExpectedOutputSetEvent {
-      id: string
-      inputId: string
-      part: 1 | 2
-      expectedOutput: string
-      updatedAt: Date
-    }
-
     it('should have consistent ID between event and query', () => {
       const year = 2024
       const day = 1
