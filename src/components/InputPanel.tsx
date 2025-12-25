@@ -302,52 +302,42 @@ export const InputPanel: Component = () => {
 
       <div class="input-tabs">
         <For each={currentDayInputs()}>
-          {(input) => {
-            const status = getStatusForInput(input.name)
-            let tooltip = ''
-            switch (status) {
-              case 'pass':
-                tooltip = '✅ Pass: Output matches expected'
-                break
-              case 'fail':
-                tooltip = '❌ Fail: Output does not match expected'
-                break
-              case 'running':
-                tooltip = '⏳ Running: Test in progress'
-                break
-              case 'error':
-                tooltip = '⚠️ Error: SQL or runtime error'
-                break
-              default:
-                tooltip = 'No test result yet'
-            }
-            return (
-              <div
-                class={`input-tab ${uiState().selectedInputName === input.name ? 'active' : ''} ${getStatusClass(input.name)}`}
+          {(input) => (
+            <div
+              class={`input-tab ${uiState().selectedInputName === input.name ? 'active' : ''} ${getStatusClass(input.name)}`}
+            >
+              <button
+                type="button"
+                class="tab-btn"
+                title={(() => {
+                  const status = getStatusForInput(input.name)
+                  if (status === 'pass')
+                    return '✅ Pass: Output matches expected'
+                  if (status === 'fail')
+                    return '❌ Fail: Output does not match expected'
+                  if (status === 'running')
+                    return '⏳ Running: Test in progress'
+                  if (status === 'error') return '⚠️ Error: SQL or runtime error'
+                  return 'No test result yet'
+                })()}
+                onClick={() => selectInput(input.name)}
               >
+                {input.name}
+              </button>
+              <Show when={input.name !== 'main'}>
                 <button
                   type="button"
-                  class="tab-btn"
-                  title={tooltip}
-                  onClick={() => selectInput(input.name)}
+                  class="delete-btn"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteInput(input.name)
+                  }}
                 >
-                  {input.name}
+                  ×
                 </button>
-                <Show when={input.name !== 'main'}>
-                  <button
-                    type="button"
-                    class="delete-btn"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      deleteInput(input.name)
-                    }}
-                  >
-                    ×
-                  </button>
-                </Show>
-              </div>
-            )
-          }}
+              </Show>
+            </div>
+          )}
         </For>
         <Show
           when={
