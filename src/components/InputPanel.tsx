@@ -8,7 +8,6 @@ import {
   Show,
 } from 'solid-js'
 import { useTestContext } from '../contexts/TestContext.tsx'
-import { DEFAULT_SOLUTION } from '../utils/constants.ts'
 import {
   currentDayInputs$,
   currentExpectedOutput$,
@@ -18,6 +17,7 @@ import {
 } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
 import { store } from '../livestore/store.ts'
+import { DEFAULT_SOLUTION } from '../utils/constants.ts'
 import { debounce } from '../utils/debounce.ts'
 
 const AUTOSAVE_DELAY = 500 // ms
@@ -156,6 +156,31 @@ export const InputPanel: Component = () => {
       }),
     )
     setIsExpectedOutputDirty(false)
+
+    // Debounced rerun of tests for all inputs (same as input save)
+    const timeout = debounceTestTimeout()
+    if (timeout) clearTimeout(timeout)
+    setDebounceTestTimeout(
+      setTimeout(() => {
+        const solution = currentSolutions()?.find(
+          (s) => s.part === ui.selectedPart,
+        )
+        const code = solution ? solution.code : DEFAULT_SOLUTION
+        const dayPrefix = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}-`
+        const expectedOutputsMap = new Map<string, string>()
+        for (const output of currentExpectedOutput() || []) {
+          if (output.inputId.startsWith(dayPrefix)) {
+            const inputName = output.inputId.slice(dayPrefix.length)
+            expectedOutputsMap.set(inputName, output.expectedOutput)
+          }
+        }
+        runTests(
+          code,
+          currentDayInputs().map((i) => ({ name: i.name, input: i.input })),
+          expectedOutputsMap,
+        )
+      }, 500),
+    )
   }
 
   // Debounced auto-save
