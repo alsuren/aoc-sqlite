@@ -134,4 +134,33 @@ SELECT 1.0, COUNT(*) FROM input_data;
       timeout: 10000,
     })
   })
+
+  test('adding a test input does not delete main input', async ({ page }) => {
+    await page.goto('/')
+
+    // Add main input
+    const inputTextarea = page.locator('.panel textarea').first()
+    await inputTextarea.fill('main input')
+    await page.waitForTimeout(600)
+
+    // Add a test input by clicking +
+    await page.locator('.add-input-btn').click()
+    await page.waitForTimeout(100)
+
+    // Fill test input
+    await inputTextarea.fill('test input')
+    await page.waitForTimeout(600)
+
+    // Switch back to main input
+    await page.locator('.tab-btn', { hasText: 'main' }).click()
+    await page.waitForTimeout(100)
+
+    // Assert main input is still present in the tabs
+    await expect(
+      page.locator('.input-tab .tab-btn', { hasText: 'main' }),
+    ).toBeVisible()
+
+    // Assert main input textarea still has the original value
+    expect(await inputTextarea.inputValue()).toBe('main input')
+  })
 })
