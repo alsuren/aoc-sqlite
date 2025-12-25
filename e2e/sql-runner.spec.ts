@@ -163,4 +163,33 @@ SELECT 1.0, COUNT(*) FROM input_data;
     // Assert main input textarea still has the original value
     expect(await inputTextarea.inputValue()).toBe('main input')
   })
+
+  test('main input tab always present even if never edited', async ({
+    page,
+  }) => {
+    await page.goto('/')
+
+    // Do not type in main input
+
+    // Add a test input by clicking +
+    await page.locator('.add-input-btn').click()
+    await page.waitForTimeout(100)
+
+    // Fill test input
+    const inputTextarea = page.locator('.panel textarea').first()
+    await inputTextarea.fill('test input')
+    await page.waitForTimeout(600)
+
+    // Switch back to main input
+    await page.locator('.tab-btn', { hasText: 'main' }).click()
+    await page.waitForTimeout(100)
+
+    // Assert main input tab is still present
+    await expect(
+      page.locator('.input-tab .tab-btn', { hasText: 'main' }),
+    ).toBeVisible()
+
+    // Assert main input textarea is empty
+    expect(await inputTextarea.inputValue()).toBe('')
+  })
 })

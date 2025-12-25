@@ -28,7 +28,15 @@ export const InputPanel: Component = () => {
     selectedPart: 1 as const,
     selectedInputName: 'main',
   })
-  const currentDayInputs = query(currentDayInputs$, [])
+  const rawDayInputs = query(currentDayInputs$, [])
+  // Always include the main input tab, even if not present in the store
+  const currentDayInputs = () => {
+    const inputs = rawDayInputs()
+    if (!inputs.some((i) => i.name === 'main')) {
+      return [{ name: 'main', input: '' }, ...inputs]
+    }
+    return inputs
+  }
   const currentInputs = query(currentInput$, [])
   const currentExpectedOutput = query(currentExpectedOutput$, [])
 
