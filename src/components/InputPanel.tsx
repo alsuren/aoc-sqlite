@@ -273,22 +273,20 @@ export const InputPanel: Component = () => {
     }
   }
 
-  // Get CSS class for test status
+  // Get CSS class for test status, suppressing flash
+  const lastStableStatus = new Map<string, string>()
   const getStatusClass = (inputName: string) => {
     const status = getStatusForInput(inputName)
     if (!status) return ''
-    switch (status) {
-      case 'running':
-        return 'test-running'
-      case 'pass':
-        return 'test-pass'
-      case 'fail':
-        return 'test-fail'
-      case 'error':
-        return 'test-error'
-      default:
-        return ''
+    if (status === 'pass' || status === 'fail' || status === 'error') {
+      lastStableStatus.set(inputName, status)
+      return `test-${status}`
     }
+    // If running/pending, show last stable status if exists
+    const stable = lastStableStatus.get(inputName)
+    if (stable) return `test-${stable}`
+    if (status === 'running') return 'test-running'
+    return ''
   }
 
   return (
