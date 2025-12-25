@@ -300,6 +300,50 @@ export const InputPanel: Component = () => {
         </Show>
       </h2>
 
+      <div
+        class="input-tabs-label-row"
+        style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;"
+      >
+        <span style="font-size: 13px; color: #aaa;">Inputs</span>
+        <span
+          class="input-tabs-tooltip-container"
+          tabindex="0"
+          style="position: relative; display: inline-block;"
+        >
+          <span style="cursor: pointer; font-size: 15px;">ℹ️</span>
+          <span
+            class="input-tabs-tooltip"
+            style="
+            visibility: hidden;
+            opacity: 0;
+            width: 220px;
+            background: #222a;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 10;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 13px;
+            box-shadow: 0 2px 8px #0006;
+            transition: opacity 0.2s;
+          "
+          >
+            <b>Tab color meanings:</b>
+            <br />
+            <span style="color:#00cc00;">●</span> Pass
+            <br />
+            <span style="color:#ffb300;">●</span> Running
+            <br />
+            <span style="color:#e74c3c;">●</span> Fail
+            <br />
+            <span style="color:#ff4444;">●</span> Error
+          </span>
+        </span>
+      </div>
       <div class="input-tabs">
         <For each={currentDayInputs()}>
           {(input) => (
