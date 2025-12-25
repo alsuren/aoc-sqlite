@@ -45,6 +45,31 @@ export interface ExportData {
 }
 
 /**
+ * Build gist files from export data
+ * Creates separate .sql files for each solution alongside the JSON
+ */
+function buildGistFiles(data: ExportData): Record<string, { content: string }> {
+  const files: Record<string, { content: string }> = {
+    'aoc-livestore-export.json': {
+      content: JSON.stringify(data, null, 2),
+    },
+  }
+
+  // Add each solution as a separate SQL file
+  for (const solution of data.solutions) {
+    if (solution.code.trim()) {
+      const day = String(solution.day).padStart(2, '0')
+      const filename = `${solution.year}-day${day}-part${solution.part}.sql`
+      files[filename] = {
+        content: solution.code,
+      }
+    }
+  }
+
+  return files
+}
+
+/**
  * Create a new Gist with the exported data
  */
 export async function createGist(
@@ -63,11 +88,7 @@ export async function createGist(
     body: JSON.stringify({
       description,
       public: isPublic,
-      files: {
-        'aoc-livestore-export.json': {
-          content: JSON.stringify(data, null, 2),
-        },
-      },
+      files: buildGistFiles(data),
     }),
   })
 
@@ -97,11 +118,7 @@ export async function updateGist(
     },
     body: JSON.stringify({
       description,
-      files: {
-        'aoc-livestore-export.json': {
-          content: JSON.stringify(data, null, 2),
-        },
-      },
+      files: buildGistFiles(data),
     }),
   })
 
