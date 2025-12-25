@@ -50,8 +50,13 @@ bun run preview
 ## Bugs to fix
 
 - [x] make the text boxes shrinkable to a min height of 1.5 text lines
+  - [ ] looks a bit shit. The gap at the bottom below the text is somehow shorter than the gap at the top.
+- [ ] if you click to add a test input, it deletes the main input, and the only way to get the main input back is to delete all test inputs - add a playwright test for this and fix the bug
+- [ ] when adding or editing an input, automatically rerun the solution against that input (debounced) and update the tab title
+- [ ] add a tooltip explaining what the color of the input tabs means
 - [ ] add a chevron to each block title, to expand/collapse the section. Save this state across refreshes, and default the export/saved inputs to closed. 
 - [x] put some default text in the solution pane. Something like `insert into output (progress, result)\nselect 1, 42`. Only include the text in the state/gist if it differs from the default.
+- [ ] AoC doesn't want us to share our inputs. Don't include the main input when exporting to gist. - add a test for this and fix the bug
 
 
 ## Future Plans
