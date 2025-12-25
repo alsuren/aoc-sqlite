@@ -14,6 +14,6 @@ describe('DEFAULT_SOLUTION', () => {
   it(`MAX_DEFAULT_LINE_LENGTH should be ${MAX_DEFAULT_LINE_LENGTH}`, () => {
     // This test documents the expected max line length
     // If you need to change it, update both the constant and this test
-    expect(MAX_DEFAULT_LINE_LENGTH).toBe(30)
+    expect(MAX_DEFAULT_LINE_LENGTH).toBe(32)
   })
 })
