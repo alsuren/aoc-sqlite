@@ -1,5 +1,5 @@
 import { query } from '@livestore/solid'
-import { type Component, createSignal, For, onMount, Show } from 'solid-js'
+import { type Component, createSignal, For, Show } from 'solid-js'
 
 import { expectedOutputs$, inputs$, solutions$ } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
@@ -14,14 +14,9 @@ import {
   parseGistData,
   updateGist,
 } from '../utils/gist.ts'
-import {
-  type AuthState,
-  clearAuth,
-  completeDeviceFlow,
-  getStoredAuth,
-  isOAuthConfigured,
-} from '../utils/github-auth.ts'
 
+// Store GitHub token in localStorage (not in LiveStore since it's sensitive)
+const TOKEN_KEY = 'aoc-livestore-github-token'
 const LAST_GIST_KEY = 'aoc-livestore-last-gist'
 
 export const ExportImportPanel: Component = () => {
@@ -29,18 +24,7 @@ export const ExportImportPanel: Component = () => {
   const solutions = query(solutions$, [])
   const expectedOutputs = query(expectedOutputs$, [])
 
-  // Auth state
-  const [authState, setAuthState] = createSignal<AuthState>({
-    token: null,
-    user: null,
-  })
-  const [isAuthenticating, setIsAuthenticating] = createSignal(false)
-  const [deviceCode, setDeviceCode] = createSignal<{
-    userCode: string
-    verificationUri: string
-  } | null>(null)
-
-  // Export/Import state
+  const [token, setToken] = createSignal(localStorage.getItem(TOKEN_KEY) || '')
   const [lastGistId, setLastGistId] = createSignal(
     localStorage.getItem(LAST_GIST_KEY) || '',
   )
@@ -48,67 +32,20 @@ export const ExportImportPanel: Component = () => {
   const [isExporting, setIsExporting] = createSignal(false)
   const [isImporting, setIsImporting] = createSignal(false)
   const [message, setMessage] = createSignal<{
-    type: 'success' | 'error' | 'info'
+    type: 'success' | 'error'
     text: string
   } | null>(null)
+  const [showSettings, setShowSettings] = createSignal(false)
   const [userGists, setUserGists] = createSignal<Gist[]>([])
   const [isPublic, setIsPublic] = createSignal(false)
 
-  // Load stored auth on mount
-  onMount(() => {
-    const stored = getStoredAuth()
-    if (stored.token && stored.user) {
-      setAuthState(stored)
-      loadUserGists()
+  const saveToken = (newToken: string) => {
+    setToken(newToken)
+    if (newToken) {
+      localStorage.setItem(TOKEN_KEY, newToken)
+    } else {
+      localStorage.removeItem(TOKEN_KEY)
     }
-  })
-
-  const token = () => authState().token
-  const user = () => authState().user
-
-  const handleLogin = async () => {
-    if (!isOAuthConfigured()) {
-      setMessage({
-        type: 'error',
-        text: 'GitHub OAuth not configured. Set VITE_GITHUB_CLIENT_ID.',
-      })
-      return
-    }
-
-    setIsAuthenticating(true)
-    setMessage(null)
-    setDeviceCode(null)
-
-    try {
-      const auth = await completeDeviceFlow(
-        (userCode, verificationUri) => {
-          setDeviceCode({ userCode, verificationUri })
-          // Open GitHub verification page
-          window.open(verificationUri, '_blank')
-        },
-        () => {
-          // Polling callback - could update UI if needed
-        },
-      )
-      setAuthState(auth)
-      setDeviceCode(null)
-      setMessage({ type: 'success', text: `Logged in as ${auth.user?.login}` })
-      loadUserGists()
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Login failed',
-      })
-    } finally {
-      setIsAuthenticating(false)
-    }
-  }
-
-  const handleLogout = () => {
-    clearAuth()
-    setAuthState({ token: null, user: null })
-    setUserGists([])
-    setMessage({ type: 'info', text: 'Logged out' })
   }
 
   const buildExportData = (): ExportData => {
@@ -145,9 +82,9 @@ export const ExportImportPanel: Component = () => {
   }
 
   const handleExport = async (update = false) => {
-    const currentToken = token()
-    if (!currentToken) {
-      setMessage({ type: 'error', text: 'Please log in with GitHub first' })
+    if (!token()) {
+      setMessage({ type: 'error', text: 'Please set your GitHub token first' })
+      setShowSettings(true)
       return
     }
 
@@ -160,10 +97,10 @@ export const ExportImportPanel: Component = () => {
 
       let gist: Gist
       if (update && lastGistId()) {
-        gist = await updateGist(currentToken, lastGistId(), data, description)
+        gist = await updateGist(token(), lastGistId(), data, description)
         setMessage({ type: 'success', text: 'Gist updated successfully!' })
       } else {
-        gist = await createGist(currentToken, data, description, isPublic())
+        gist = await createGist(token(), data, description, isPublic())
         setLastGistId(gist.id)
         localStorage.setItem(LAST_GIST_KEY, gist.id)
         setMessage({ type: 'success', text: 'Gist created successfully!' })
@@ -269,10 +206,9 @@ export const ExportImportPanel: Component = () => {
   }
 
   const loadUserGists = async () => {
-    const currentToken = token()
-    if (!currentToken) return
+    if (!token()) return
     try {
-      const gists = await listUserGists(currentToken)
+      const gists = await listUserGists(token())
       setUserGists(gists)
     } catch {
       // Ignore errors loading gists
@@ -369,86 +305,17 @@ export const ExportImportPanel: Component = () => {
         {(msg) => <div class={`message ${msg().type}`}>{msg().text}</div>}
       </Show>
 
-      {/* Auth Section */}
-      <div class="auth-section">
-        <Show
-          when={user()}
-          fallback={
-            <Show
-              when={isOAuthConfigured()}
-              fallback={
-                <p class="oauth-not-configured">
-                  GitHub OAuth not configured. To enable Gist export, set{' '}
-                  <code>VITE_GITHUB_CLIENT_ID</code> environment variable.
-                </p>
-              }
-            >
-              <Show
-                when={deviceCode()}
-                fallback={
-                  <button
-                    type="button"
-                    class="login-btn"
-                    onClick={handleLogin}
-                    disabled={isAuthenticating()}
-                  >
-                    {isAuthenticating()
-                      ? '⏳ Waiting for authorization...'
-                      : '🔐 Login with GitHub'}
-                  </button>
-                }
-              >
-                {(code) => (
-                  <div class="device-code-prompt">
-                    <p>
-                      Enter this code on GitHub:{' '}
-                      <strong class="user-code">{code().userCode}</strong>
-                    </p>
-                    <p class="verification-link">
-                      <a
-                        href={code().verificationUri}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {code().verificationUri}
-                      </a>
-                    </p>
-                    <p class="waiting-text">Waiting for authorization...</p>
-                  </div>
-                )}
-              </Show>
-            </Show>
-          }
-        >
-          {(currentUser) => (
-            <div class="user-info">
-              <img
-                src={currentUser().avatar_url}
-                alt={currentUser().login}
-                class="avatar"
-              />
-              <span class="username">
-                {currentUser().name || currentUser().login}
-              </span>
-              <button type="button" class="logout-btn" onClick={handleLogout}>
-                Logout
-              </button>
-            </div>
-          )}
-        </Show>
-      </div>
-
       <div class="export-section">
         <h3>Export to Gist</h3>
         <div class="export-buttons">
           <button
             type="button"
             onClick={() => handleExport(false)}
-            disabled={isExporting() || !token()}
+            disabled={isExporting()}
           >
             {isExporting() ? '⏳ Exporting...' : '📤 Create New Gist'}
           </button>
-          <Show when={lastGistId() && token()}>
+          <Show when={lastGistId()}>
             <button
               type="button"
               onClick={() => handleExport(true)}
@@ -461,16 +328,14 @@ export const ExportImportPanel: Component = () => {
             💾 Download JSON
           </button>
         </div>
-        <Show when={token()}>
-          <label class="public-checkbox">
-            <input
-              type="checkbox"
-              checked={isPublic()}
-              onChange={(e) => setIsPublic(e.currentTarget.checked)}
-            />
-            Make gist public
-          </label>
-        </Show>
+        <label class="public-checkbox">
+          <input
+            type="checkbox"
+            checked={isPublic()}
+            onChange={(e) => setIsPublic(e.currentTarget.checked)}
+          />
+          Make gist public
+        </label>
       </div>
 
       <div class="import-section">
@@ -518,6 +383,46 @@ export const ExportImportPanel: Component = () => {
                 </button>
               )}
             </For>
+          </div>
+        </Show>
+      </div>
+
+      <div class="settings-section">
+        <button
+          type="button"
+          class="settings-toggle"
+          onClick={() => {
+            setShowSettings(!showSettings())
+            if (!showSettings() && token()) {
+              loadUserGists()
+            }
+          }}
+        >
+          ⚙️ {showSettings() ? 'Hide' : 'Show'} Settings
+        </button>
+
+        <Show when={showSettings()}>
+          <div class="settings-content">
+            <label>
+              GitHub Personal Access Token
+              <input
+                type="password"
+                value={token()}
+                onInput={(e) => saveToken(e.currentTarget.value)}
+                placeholder="ghp_xxxxxxxxxxxx"
+              />
+            </label>
+            <p class="token-help">
+              Create a token at{' '}
+              <a
+                href="https://github.com/settings/tokens/new?scopes=gist&description=AoC%20LiveStore"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub Settings
+              </a>{' '}
+              with the <code>gist</code> scope.
+            </p>
           </div>
         </Show>
       </div>

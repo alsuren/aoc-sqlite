@@ -29,11 +29,7 @@ jobs:
         run: bun install
 
       - name: Build
-        run: |
-          echo "VITE_GITHUB_CLIENT_ID is set: ${{ vars.VITE_GITHUB_CLIENT_ID != '' }}"
-          bun run build
-        env:
-          VITE_GITHUB_CLIENT_ID: ${{ vars.VITE_GITHUB_CLIENT_ID }}
+        run: bun run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
