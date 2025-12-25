@@ -299,6 +299,32 @@ export const InputPanel: Component = () => {
       </h2>
 
       <div class="input-tabs">
+        <div class="input-tabs-tooltip-container">
+          <span class="input-tabs-tooltip-icon" tabindex="0">
+            ❓
+          </span>
+          <div class="input-tabs-tooltip">
+            <div>
+              <span class="tab-legend test-pass"></span> Pass: Output matches
+              expected
+            </div>
+            <div>
+              <span class="tab-legend test-fail"></span> Fail: Output does not
+              match expected
+            </div>
+            <div>
+              <span class="tab-legend test-running"></span> Running: Test in
+              progress
+            </div>
+            <div>
+              <span class="tab-legend test-error"></span> Error: SQL or runtime
+              error
+            </div>
+            <div>
+              <span class="tab-legend"></span> No test result yet
+            </div>
+          </div>
+        </div>
         <For each={currentDayInputs()}>
           {(input) => (
             <div

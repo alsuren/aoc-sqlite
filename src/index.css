@@ -1,3 +1,51 @@
+/* Input Tabs Tooltip */
+.input-tabs-tooltip-container {
+  position: relative;
+  display: inline-block;
+  margin-right: 8px;
+}
+.input-tabs-tooltip-icon {
+  cursor: pointer;
+  font-size: 16px;
+  color: #aaa;
+  vertical-align: middle;
+}
+.input-tabs-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  width: 260px;
+  background: #222b44;
+  color: #eee;
+  text-align: left;
+  border-radius: 6px;
+  padding: 10px 14px;
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  top: 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  transition: opacity 0.2s;
+  font-size: 13px;
+}
+.input-tabs-tooltip-container:focus .input-tabs-tooltip,
+.input-tabs-tooltip-container:hover .input-tabs-tooltip {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.tab-legend {
+  display: inline-block;
+  width: 18px;
+  height: 12px;
+  border-radius: 4px;
+  margin-right: 8px;
+  vertical-align: middle;
+  background: #444;
+  border: 1px solid #222;
+}
+.tab-legend.test-pass { background: #1e7e34; border-color: #28a745; }
+.tab-legend.test-fail { background: #a71d2a; border-color: #dc3545; }
+.tab-legend.test-running { background: #ffc107; border-color: #ffecb5; }
+.tab-legend.test-error { background: #b8860b; border-color: #ffd700; }
 * {
   box-sizing: border-box;
 }
