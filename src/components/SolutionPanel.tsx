@@ -19,6 +19,7 @@ import {
 } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
 import { store } from '../livestore/store.ts'
+import { DEFAULT_SOLUTION } from '../utils/constants.ts'
 import { debounce } from '../utils/debounce.ts'
 import { executeSQL, type SQLResult } from '../utils/sql-runner.ts'
 
@@ -56,7 +57,7 @@ export const SolutionPanel: Component = () => {
     if (solution) {
       setLocalCode(solution.code)
     } else {
-      setLocalCode('')
+      setLocalCode(DEFAULT_SOLUTION)
     }
     setIsDirty(false)
   })
@@ -72,9 +73,16 @@ export const SolutionPanel: Component = () => {
   const saveSolution = () => {
     if (!isDirty()) return
 
+    // Don't save if code is the default template (unless updating existing)
+    const code = localCode()
+    const solution = currentSolution()
+    if (!solution && code === DEFAULT_SOLUTION) {
+      setIsDirty(false)
+      return
+    }
+
     const ui = uiState()
     const id = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}-${ui.selectedPart}`
-    const solution = currentSolution()
     const now = new Date()
 
     if (solution) {
@@ -82,7 +90,7 @@ export const SolutionPanel: Component = () => {
       store()?.commit(
         events.solutionUpdated({
           id,
-          code: localCode(),
+          code,
           updatedAt: now,
         }),
       )
@@ -94,7 +102,7 @@ export const SolutionPanel: Component = () => {
           year: ui.selectedYear,
           day: ui.selectedDay,
           part: ui.selectedPart,
-          code: localCode(),
+          code,
           language: 'sql',
           createdAt: now,
         }),

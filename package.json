@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "precommit": "bun run check && bun run typecheck && bun run test && bun run test:e2e"
   },
   "dependencies": {
     "@livestore/adapter-web": "0.3.1",

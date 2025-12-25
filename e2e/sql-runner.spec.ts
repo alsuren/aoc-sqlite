@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test.describe('SQL Runner', () => {
   test('should execute simple SQL and show result', async ({ page }) => {

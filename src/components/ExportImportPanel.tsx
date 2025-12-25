@@ -4,6 +4,7 @@ import { type Component, createSignal, For, Show } from 'solid-js'
 import { expectedOutputs$, inputs$, solutions$ } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
 import { store } from '../livestore/store.ts'
+import { DEFAULT_SOLUTION } from '../utils/constants.ts'
 import {
   createGist,
   type ExportData,
@@ -53,6 +54,11 @@ export const ExportImportPanel: Component = () => {
     const allSolutions = solutions() || []
     const allExpectedOutputs = expectedOutputs() || []
 
+    // Filter out solutions that are just the default template
+    const filteredSolutions = allSolutions.filter(
+      (s) => s.code !== DEFAULT_SOLUTION,
+    )
+
     return {
       version: 1,
       exportedAt: new Date().toISOString(),
@@ -63,7 +69,7 @@ export const ExportImportPanel: Component = () => {
         name: i.name,
         input: i.input,
       })),
-      solutions: allSolutions.map((s) => ({
+      solutions: filteredSolutions.map((s) => ({
         id: s.id,
         year: s.year,
         day: s.day,

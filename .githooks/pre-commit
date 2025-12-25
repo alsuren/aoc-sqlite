@@ -1,5 +1,5 @@
 #!/bin/sh
-# Pre-commit hook to format staged files with Biome and check TypeScript
+# Pre-commit hook to format staged files with Biome and run checks
 
 # Get list of staged files
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx|json)$')
@@ -12,18 +12,9 @@ if [ -n "$STAGED_FILES" ]; then
   echo "$STAGED_FILES" | xargs git add
 fi
 
-# Run TypeScript type checking
-echo "Running TypeScript type check..."
-bun run typecheck
+# Run typecheck and tests
+bun run precommit
 if [ $? -ne 0 ]; then
-  echo "TypeScript errors found. Please fix them before committing."
-  exit 1
-fi
-
-# Run tests
-echo "Running tests..."
-bun run test
-if [ $? -ne 0 ]; then
-  echo "Tests failed. Please fix them before committing."
+  echo "Pre-commit checks failed. Please fix the issues before committing."
   exit 1
 fi
