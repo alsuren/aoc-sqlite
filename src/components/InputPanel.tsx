@@ -8,6 +8,7 @@ import {
   Show,
 } from 'solid-js'
 import { useTestContext } from '../contexts/TestContext.tsx'
+import { DEFAULT_SOLUTION } from '../utils/constants.ts'
 import {
   currentDayInputs$,
   currentExpectedOutput$,
@@ -113,27 +114,26 @@ export const InputPanel: Component = () => {
     if (timeout) clearTimeout(timeout)
     setDebounceTestTimeout(
       setTimeout(() => {
-        // Find current solution for this part
+        // Find current solution for this part, or use default
         const solution = currentSolutions()?.find(
           (s) => s.part === ui.selectedPart,
         )
-        if (solution && solution.code.trim()) {
-          // Build expected outputs map for current day inputs
-          const dayPrefix = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}-`
-          const expectedOutputsMap = new Map<string, string>()
-          for (const output of currentExpectedOutput() || []) {
-            if (output.inputId.startsWith(dayPrefix)) {
-              const inputName = output.inputId.slice(dayPrefix.length)
-              expectedOutputsMap.set(inputName, output.expectedOutput)
-            }
+        const code = solution ? solution.code : DEFAULT_SOLUTION
+        // Build expected outputs map for current day inputs
+        const dayPrefix = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}-`
+        const expectedOutputsMap = new Map<string, string>()
+        for (const output of currentExpectedOutput() || []) {
+          if (output.inputId.startsWith(dayPrefix)) {
+            const inputName = output.inputId.slice(dayPrefix.length)
+            expectedOutputsMap.set(inputName, output.expectedOutput)
           }
-          // Rerun tests
-          runTests(
-            solution.code,
-            currentDayInputs().map((i) => ({ name: i.name, input: i.input })),
-            expectedOutputsMap,
-          )
         }
+        // Rerun tests
+        runTests(
+          code,
+          currentDayInputs().map((i) => ({ name: i.name, input: i.input })),
+          expectedOutputsMap,
+        )
       }, 500),
     )
   }
