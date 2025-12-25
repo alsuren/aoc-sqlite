@@ -75,3 +75,8 @@ export const currentDayExpectedOutputs$ = queryDb(
   },
   { label: 'currentDayExpectedOutputs' },
 )
+
+// Get all expected outputs
+export const expectedOutputs$ = queryDb(tables.expectedOutputs, {
+  label: 'expectedOutputs',
+})

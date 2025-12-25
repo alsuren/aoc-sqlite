@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js'
 
 import { DaySelector } from './components/DaySelector.tsx'
+import { ExportImportPanel } from './components/ExportImportPanel.tsx'
 import { InputList } from './components/InputList.tsx'
 import { InputPanel } from './components/InputPanel.tsx'
 import { SolutionPanel } from './components/SolutionPanel.tsx'
@@ -16,6 +17,7 @@ const App: Component = () => {
           <InputPanel />
           <SolutionPanel />
         </div>
+        <ExportImportPanel />
         <InputList />
       </div>
     </TestProvider>

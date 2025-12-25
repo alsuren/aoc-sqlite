@@ -483,3 +483,226 @@ h1 {
   background: #16213e;
   cursor: pointer;
 }
+
+/* Export/Import Panel */
+.export-import-panel {
+  margin-top: 20px;
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.export-import-panel h2 {
+  margin-top: 0;
+  color: #cccccc;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #0f3460;
+  padding-bottom: 8px;
+}
+
+.export-import-panel h3 {
+  margin: 16px 0 8px 0;
+  font-size: 13px;
+  color: #888;
+}
+
+.export-import-panel h4 {
+  margin: 12px 0 8px 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.export-import-panel .message {
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.export-import-panel .message.success {
+  background: rgba(0, 204, 0, 0.15);
+  color: #00cc00;
+  border: 1px solid #00cc00;
+}
+
+.export-import-panel .message.error {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff4444;
+  border: 1px solid #ff4444;
+}
+
+.export-section,
+.import-section,
+.settings-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #0f3460;
+}
+
+.export-section:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.export-buttons button,
+.import-row button {
+  padding: 8px 16px;
+  background: #0f3460;
+  color: #eee;
+  border: 1px solid #1a4a7a;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.export-buttons button:hover:not(:disabled),
+.import-row button:hover:not(:disabled) {
+  background: #1a4a7a;
+}
+
+.export-buttons button:disabled,
+.import-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.public-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #888;
+}
+
+.public-checkbox input {
+  cursor: pointer;
+}
+
+.import-row {
+  display: flex;
+  gap: 8px;
+}
+
+.import-row input[type="text"] {
+  flex: 1;
+  padding: 8px 12px;
+  background: #0d1b2a;
+  color: #eee;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.import-row input[type="text"]:focus {
+  outline: none;
+  border-color: #00cc00;
+}
+
+.file-import {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #888;
+}
+
+.file-import input[type="file"] {
+  font-size: 13px;
+}
+
+.user-gists {
+  margin-top: 12px;
+}
+
+.gist-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 4px;
+  background: #0d1b2a;
+  color: #888;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+}
+
+.gist-item:hover {
+  border-color: #00cc00;
+  color: #eee;
+}
+
+.settings-toggle {
+  padding: 6px 12px;
+  background: transparent;
+  color: #666;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.settings-toggle:hover {
+  color: #888;
+  border-color: #1a4a7a;
+}
+
+.settings-content {
+  margin-top: 12px;
+  padding: 12px;
+  background: #0d1b2a;
+  border-radius: 4px;
+}
+
+.settings-content label {
+  display: block;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.settings-content input[type="password"] {
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: #1a1a2e;
+  color: #eee;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.settings-content input[type="password"]:focus {
+  outline: none;
+  border-color: #00cc00;
+}
+
+.token-help {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.token-help a {
+  color: #00cc00;
+}
+
+.token-help code {
+  background: #0f3460;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+}
