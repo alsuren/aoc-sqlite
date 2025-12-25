@@ -305,8 +305,6 @@ export const ExportImportPanel: Component = () => {
 
   return (
     <div class="export-import-panel">
-      <h2>📤 Export / Import</h2>
-
       <Show when={message()}>
         {(msg) => <div class={`message ${msg().type}`}>{msg().text}</div>}
       </Show>

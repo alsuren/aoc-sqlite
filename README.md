@@ -51,7 +51,7 @@ bun run preview
 
 - [x] make the text boxes shrinkable to a min height of 1.5 text lines
 - [ ] add a chevron to each block title, to expand/collapse the section. Save this state across refreshes, and default the export/saved inputs to closed. 
-- [ ] put some default text in the solution pane. Something like `insert into output (progress, result)\nselect 1, 42`. Only include the text in the state/gist if it differs from the default.
+- [x] put some default text in the solution pane. Something like `insert into output (progress, result)\nselect 1, 42`. Only include the text in the state/gist if it differs from the default.
 
 
 ## Future Plans

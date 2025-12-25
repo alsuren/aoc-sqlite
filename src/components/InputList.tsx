@@ -21,7 +21,6 @@ export const InputList: Component = () => {
 
   return (
     <div class="input-list">
-      <h2>📋 Saved Inputs</h2>
       <Show
         when={inputs()?.length}
         fallback={

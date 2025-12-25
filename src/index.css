@@ -707,3 +707,67 @@ h1 {
   border-radius: 3px;
   font-size: 11px;
 }
+
+/* Collapsible Sections */
+.collapsible-section {
+  margin-top: 20px;
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.collapsible-header {
+  margin: 0;
+}
+
+.collapsible-header button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  color: #cccccc;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+  background: transparent;
+  border: none;
+  text-align: left;
+}
+
+.collapsible-header button:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.collapsible-header button:focus {
+  outline: 2px solid #1e90ff;
+  outline-offset: -2px;
+}
+
+.collapsible-header .chevron {
+  font-size: 12px;
+  color: #666;
+  transition: transform 0.15s;
+}
+
+.collapsible-section.collapsed .collapsible-header {
+  border-bottom: none;
+}
+
+.collapsible-content {
+  border-top: 1px solid #0f3460;
+}
+
+/* Adjust nested panels in collapsible sections */
+.collapsible-content .export-import-panel,
+.collapsible-content .input-list {
+  margin-top: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
