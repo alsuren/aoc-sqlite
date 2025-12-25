@@ -299,7 +299,6 @@ export const InputPanel: Component = () => {
       </h2>
 
       <div class="input-tabs">
-        {/* Tooltip removed as requested */}
         <For each={currentDayInputs()}>
           {(input) => (
             <div
