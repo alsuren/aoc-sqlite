@@ -1,4 +1,4 @@
-import { query } from '@livestore/solid'
+import { query, query as solidQuery } from '@livestore/solid'
 import {
   type Component,
   createEffect,
@@ -7,12 +7,12 @@ import {
   onCleanup,
   Show,
 } from 'solid-js'
-
 import { useTestContext } from '../contexts/TestContext.tsx'
 import {
   currentDayInputs$,
   currentExpectedOutput$,
   currentInput$,
+  currentSolutions$,
   uiState$,
 } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
@@ -41,6 +41,13 @@ export const InputPanel: Component = () => {
   const currentExpectedOutput = query(currentExpectedOutput$, [])
 
   const { getStatusForInput, isRunning: isTestsRunning } = useTestContext()
+
+  // For rerunning tests on input change
+  const currentSolutions = solidQuery(currentSolutions$, [])
+  const [debounceTestTimeout, setDebounceTestTimeout] = createSignal<ReturnType<
+    typeof setTimeout
+  > | null>(null)
+  const { runTests } = useTestContext()
 
   const [localInput, setLocalInput] = createSignal('')
   const [localExpectedOutput, setLocalExpectedOutput] = createSignal('')
@@ -100,6 +107,35 @@ export const InputPanel: Component = () => {
       )
     }
     setIsDirty(false)
+
+    // Debounced rerun of tests for all inputs
+    const timeout = debounceTestTimeout()
+    if (timeout) clearTimeout(timeout)
+    setDebounceTestTimeout(
+      setTimeout(() => {
+        // Find current solution for this part
+        const solution = currentSolutions()?.find(
+          (s) => s.part === ui.selectedPart,
+        )
+        if (solution && solution.code.trim()) {
+          // Build expected outputs map for current day inputs
+          const dayPrefix = `${ui.selectedYear}-${String(ui.selectedDay).padStart(2, '0')}-`
+          const expectedOutputsMap = new Map<string, string>()
+          for (const output of currentExpectedOutput() || []) {
+            if (output.inputId.startsWith(dayPrefix)) {
+              const inputName = output.inputId.slice(dayPrefix.length)
+              expectedOutputsMap.set(inputName, output.expectedOutput)
+            }
+          }
+          // Rerun tests
+          runTests(
+            solution.code,
+            currentDayInputs().map((i) => ({ name: i.name, input: i.input })),
+            expectedOutputsMap,
+          )
+        }
+      }, 500),
+    )
   }
 
   const saveExpectedOutput = () => {
