@@ -52,7 +52,7 @@ bun run preview
 
 - [x] make the text boxes shrinkable to a min height of 1.5 text lines
   - [ ] looks a bit shit. The gap at the bottom below the text is somehow shorter than the gap at the top.
-- [ ] if you click to add a test input, it deletes the main input, and the only way to get the main input back is to delete all test inputs - add a playwright test for this and fix the bug
+  - [x] if you click to add a test input, it deletes the main input, and the only way to get the main input back is to delete all test inputs - add a playwright test for this and fix the bug
 - [ ] when adding or editing an input, automatically rerun the solution against that input (debounced) and update the tab title
 - [x] tabs should not flash after rerunning tests
   - [x] add a tooltip explaining what the color of the input tabs means
