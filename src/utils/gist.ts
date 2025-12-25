@@ -48,10 +48,16 @@ export interface ExportData {
  * Build gist files from export data
  * Creates separate .sql files for each solution alongside the JSON
  */
-function buildGistFiles(data: ExportData): Record<string, { content: string }> {
+export function buildGistFiles(
+  data: ExportData,
+): Record<string, { content: string }> {
+  // Remove main input from export
+  const filteredInputs = data.inputs.filter((i) => i.name !== 'main')
+  const filteredData = { ...data, inputs: filteredInputs }
+
   const files: Record<string, { content: string }> = {
     'aoc-livestore-export.json': {
-      content: JSON.stringify(data, null, 2),
+      content: JSON.stringify(filteredData, null, 2),
     },
   }
 
