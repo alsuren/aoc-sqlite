@@ -50,7 +50,7 @@ bun run preview
 
 ## Bugs to fix
 
-- [ ] ignore playwright-report dir and remove all contained files from git
+- [x] ignore playwright-report dir and remove all contained files from git
 - [ ] hard forbid !important in css in biome, and fix the warnings about it.
 - [ ] The name aoc-livestore was a temporary measure. Find all public references to aoc-livestore and replace it with aoc-sqlite (e.g. the filename `aoc-livestore-export.json` and the suggested github token name)
 - [x] make the text boxes shrinkable to a min height of 1.5 text lines
