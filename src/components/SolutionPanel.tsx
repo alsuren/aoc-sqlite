@@ -51,6 +51,14 @@ export const SolutionPanel: Component = () => {
     return solutions?.find((s) => s.part === uiState().selectedPart)
   }
 
+  // Clear result when UI selection changes (day, part, or input)
+  createEffect(() => {
+    // Access uiState to track changes
+    const _ui = uiState()
+    // Clear the result panel when selection changes
+    setRunResult(null)
+  })
+
   // Sync local code with stored solution when selection changes
   createEffect(() => {
     const solution = currentSolution()
