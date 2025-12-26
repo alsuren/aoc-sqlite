@@ -58,7 +58,7 @@ bun run preview
   - [x] if you click to add a test input, it deletes the main input, and the only way to get the main input back is to delete all test inputs - add a playwright test for this and fix the bug
 - [x] main should not be highlighted like the rest of the tabs, because we don't automatically run it and can't check the answer
 - [x] whenever I switch day, from part 1 to part 2, or between the different test inputs, clear the "RESULT" section until I next click Run again.
-- [ ] reset to part 1 when changing to a new day that you've not seen before
+- [x] reset to part 1 when changing to a new day that you've not seen before
 - [ ] AoC doesn't want us to share our inputs. Don't include the main input when exporting to gist. - add a test for this and fix the bug
 - [ ] add a chevron to each block title, to expand/collapse the section. Save this state across refreshes, and default the export/saved inputs to closed. 
 - [ ] when adding or editing an input, automatically rerun the solution against that input (debounced) and update the tab title
