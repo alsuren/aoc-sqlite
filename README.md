@@ -54,7 +54,7 @@ bun run preview
 - [x] hard forbid !important in css in biome, and fix the warnings about it.
 - [x] The name aoc-livestore was a temporary measure. Find all public references to aoc-livestore and replace it with aoc-sqlite (e.g. the filename `aoc-livestore-export.json` and the suggested github token name)
 - [x] make the text boxes shrinkable to a min height of 1.5 text lines
-  - [ ] looks a bit shit. The gap at the bottom below the text is somehow shorter than the gap at the top.
+  - [x] looks a bit shit. The gap at the bottom below the text is somehow shorter than the gap at the top.
   - [x] if you click to add a test input, it deletes the main input, and the only way to get the main input back is to delete all test inputs - add a playwright test for this and fix the bug
 - [x] main should not be highlighted like the rest of the tabs, because we don't automatically run it and can't check the answer
 - [x] whenever I switch day, from part 1 to part 2, or between the different test inputs, clear the "RESULT" section until I next click Run again.
