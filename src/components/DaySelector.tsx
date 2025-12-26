@@ -1,7 +1,7 @@
 import { query } from '@livestore/solid'
 import { type Component, createEffect, For, onMount } from 'solid-js'
 
-import { uiState$ } from '../livestore/queries.ts'
+import { solutions$, uiState$ } from '../livestore/queries.ts'
 import { events } from '../livestore/schema.ts'
 import { store } from '../livestore/store.ts'
 import { getLatestAocYear, parseUrlHash, updateUrlHash } from '../utils/url.ts'
@@ -14,10 +14,16 @@ export const DaySelector: Component = () => {
     selectedPart: 1 as const,
     selectedInputName: 'main',
   })
+  const solutions = query(solutions$, [])
 
   // Show 10 years starting from the latest AoC year
   const years = () => Array.from({ length: 10 }, (_, i) => latestYear - i)
   const days = () => Array.from({ length: 25 }, (_, i) => i + 1)
+
+  // Check if a specific year/day has any solutions (i.e., has been seen before)
+  const hasSolutionsForDay = (year: number, day: number) => {
+    return solutions().some((s) => s.year === year && s.day === day)
+  }
 
   // On mount, read URL and update state if valid
   onMount(() => {
@@ -41,11 +47,25 @@ export const DaySelector: Component = () => {
   })
 
   const setYear = (year: number) => {
-    store()?.commit(events.uiStateSet({ ...uiState(), selectedYear: year }))
+    const ui = uiState()
+    // Reset to part 1 if the new year/day combination hasn't been seen before
+    const newPart = hasSolutionsForDay(year, ui.selectedDay)
+      ? ui.selectedPart
+      : 1
+    store()?.commit(
+      events.uiStateSet({ ...ui, selectedYear: year, selectedPart: newPart }),
+    )
   }
 
   const setDay = (day: number) => {
-    store()?.commit(events.uiStateSet({ ...uiState(), selectedDay: day }))
+    const ui = uiState()
+    // Reset to part 1 if the new day hasn't been seen before
+    const newPart = hasSolutionsForDay(ui.selectedYear, day)
+      ? ui.selectedPart
+      : 1
+    store()?.commit(
+      events.uiStateSet({ ...ui, selectedDay: day, selectedPart: newPart }),
+    )
   }
 
   return (
