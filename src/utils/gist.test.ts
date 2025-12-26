@@ -86,18 +86,20 @@ describe('prepareExportData', () => {
     const testInput = result.inputs.find((i) => i.name === 'test1')
     expect(testInput).toBeDefined()
     expect(testInput!.expectedOutputs).toHaveLength(2)
-    
-    const p1Output = testInput!.expectedOutputs.find(e => e.part === 1)
+
+    const p1Output = testInput!.expectedOutputs.find((e) => e.part === 1)
     expect(p1Output?.expectedOutput).toBe('42')
-    
-    const p2Output = testInput!.expectedOutputs.find(e => e.part === 2)
+
+    const p2Output = testInput!.expectedOutputs.find((e) => e.part === 2)
     expect(p2Output?.expectedOutput).toBe('100')
 
     // Check top-level solutions
     expect(result.solutions).toHaveLength(3)
-    const day1Solutions = result.solutions.filter(s => s.year === 2024 && s.day === 1)
+    const day1Solutions = result.solutions.filter(
+      (s) => s.year === 2024 && s.day === 1,
+    )
     expect(day1Solutions).toHaveLength(2)
-    expect(day1Solutions.map(s => s.part).sort()).toEqual([1, 2])
+    expect(day1Solutions.map((s) => s.part).sort()).toEqual([1, 2])
   })
 })
 

@@ -7,13 +7,6 @@ import {
   onCleanup,
   Show,
 } from 'solid-js'
-
-import {
-  CollapsibleSection,
-  isCollapsed,
-  toggleCollapsed,
-} from './CollapsibleSection.tsx'
-
 import { useTestContext } from '../contexts/TestContext.tsx'
 import {
   currentDayExpectedOutputs$,
@@ -28,6 +21,11 @@ import { store } from '../livestore/store.ts'
 import { DEFAULT_SOLUTION } from '../utils/constants.ts'
 import { debounce } from '../utils/debounce.ts'
 import { executeSQL, type SQLResult } from '../utils/sql-runner.ts'
+import {
+  CollapsibleSection,
+  isCollapsed,
+  toggleCollapsed,
+} from './CollapsibleSection.tsx'
 
 const AUTOSAVE_DELAY = 500
 
@@ -50,7 +48,7 @@ export const SolutionPanel: Component = () => {
   const [isDirty, setIsDirty] = createSignal(false)
   const [isRunning, setIsRunning] = createSignal(false)
   const [runResult, setRunResult] = createSignal<SQLResult | null>(null)
-  
+
   const [collapsed, setCollapsed] = createSignal(
     isCollapsed('solutionPanel', false),
   )
@@ -239,91 +237,91 @@ export const SolutionPanel: Component = () => {
       onToggle={() => setCollapsed(toggleCollapsed('solutionPanel', false))}
     >
       <div class="panel">
-      <div class="part-tabs">
-        <button
-          type="button"
-          class={uiState().selectedPart === 1 ? 'active' : ''}
-          onClick={() => setPart(1)}
-        >
-          Part 1
-        </button>
-        <button
-          type="button"
-          class={uiState().selectedPart === 2 ? 'active' : ''}
-          onClick={() => setPart(2)}
-        >
-          Part 2
-        </button>
-      </div>
-      <textarea
-        value={localCode()}
-        onInput={(e) => handleCodeInput(e.currentTarget.value)}
-        placeholder="Write your SQL solution here..."
-      />
-      <div class="solution-actions">
-        <div class="save-status">{isDirty() ? 'Saving...' : 'Saved'}</div>
-        <button
-          type="button"
-          class="run-btn"
-          onClick={runSolution}
-          disabled={isRunning() || !localCode()}
-        >
-          {isRunning() ? '⏳ Running...' : '▶️ Run'}
-        </button>
-      </div>
-
-      <Show when={runResult()}>
-        {(result) => (
-          <div
-            class={`result-panel ${result().success ? 'success' : 'error'} ${resultMatches() === true ? 'matches' : resultMatches() === false ? 'mismatch' : ''}`}
+        <div class="part-tabs">
+          <button
+            type="button"
+            class={uiState().selectedPart === 1 ? 'active' : ''}
+            onClick={() => setPart(1)}
           >
-            <h3>
-              {result().success ? '✅ Result' : '❌ Error'}
-              <Show when={resultMatches() === true}>
-                <span class="match-badge">✓ Matches expected</span>
+            Part 1
+          </button>
+          <button
+            type="button"
+            class={uiState().selectedPart === 2 ? 'active' : ''}
+            onClick={() => setPart(2)}
+          >
+            Part 2
+          </button>
+        </div>
+        <textarea
+          value={localCode()}
+          onInput={(e) => handleCodeInput(e.currentTarget.value)}
+          placeholder="Write your SQL solution here..."
+        />
+        <div class="solution-actions">
+          <div class="save-status">{isDirty() ? 'Saving...' : 'Saved'}</div>
+          <button
+            type="button"
+            class="run-btn"
+            onClick={runSolution}
+            disabled={isRunning() || !localCode()}
+          >
+            {isRunning() ? '⏳ Running...' : '▶️ Run'}
+          </button>
+        </div>
+
+        <Show when={runResult()}>
+          {(result) => (
+            <div
+              class={`result-panel ${result().success ? 'success' : 'error'} ${resultMatches() === true ? 'matches' : resultMatches() === false ? 'mismatch' : ''}`}
+            >
+              <h3>
+                {result().success ? '✅ Result' : '❌ Error'}
+                <Show when={resultMatches() === true}>
+                  <span class="match-badge">✓ Matches expected</span>
+                </Show>
+                <Show when={resultMatches() === false}>
+                  <span class="mismatch-badge">✗ Does not match expected</span>
+                </Show>
+              </h3>
+              <Show when={result().error}>
+                <pre class="error-output">{result().error}</pre>
               </Show>
-              <Show when={resultMatches() === false}>
-                <span class="mismatch-badge">✗ Does not match expected</span>
-              </Show>
-            </h3>
-            <Show when={result().error}>
-              <pre class="error-output">{result().error}</pre>
-            </Show>
-            <Show when={(result().debugRows?.length ?? 0) > 0}>
-              <div class="debug-rows">
-                <h4>Debug Output</h4>
-                <For each={result().debugRows}>
-                  {(row) => (
-                    <div class="debug-row">
-                      <span class="progress">
-                        {Math.round(row.progress * 100)}%
-                      </span>
-                      <span class="debug-result">{row.result}</span>
-                    </div>
-                  )}
-                </For>
-              </div>
-            </Show>
-            <Show when={result().result !== undefined}>
-              <div class="final-result">
-                <strong>Answer:</strong> {result().result}
-              </div>
-              <Show when={expectedOutput()}>
-                <div class="expected-result">
-                  <strong>Expected:</strong> {expectedOutput()}
+              <Show when={(result().debugRows?.length ?? 0) > 0}>
+                <div class="debug-rows">
+                  <h4>Debug Output</h4>
+                  <For each={result().debugRows}>
+                    {(row) => (
+                      <div class="debug-row">
+                        <span class="progress">
+                          {Math.round(row.progress * 100)}%
+                        </span>
+                        <span class="debug-result">{row.result}</span>
+                      </div>
+                    )}
+                  </For>
                 </div>
               </Show>
-            </Show>
-          </div>
-        )}
-      </Show>
-
-      <div class="input-info">
-        Running against: <strong>{uiState().selectedInputName}</strong> input
-        <Show when={!currentInput() || currentInput().length === 0}>
-          <span class="warning"> (no input data)</span>
+              <Show when={result().result !== undefined}>
+                <div class="final-result">
+                  <strong>Answer:</strong> {result().result}
+                </div>
+                <Show when={expectedOutput()}>
+                  <div class="expected-result">
+                    <strong>Expected:</strong> {expectedOutput()}
+                  </div>
+                </Show>
+              </Show>
+            </div>
+          )}
         </Show>
-      </div>
+
+        <div class="input-info">
+          Running against: <strong>{uiState().selectedInputName}</strong> input
+          <Show when={!currentInput() || currentInput().length === 0}>
+            <span class="warning"> (no input data)</span>
+          </Show>
+        </div>
       </div>
     </CollapsibleSection>
   )

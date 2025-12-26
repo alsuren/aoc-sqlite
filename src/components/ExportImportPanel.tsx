@@ -121,7 +121,7 @@ export const ExportImportPanel: Component = () => {
       // Import from data (handles V1 and V2)
       // V1: solutions top-level, expectedOutputs top-level
       // V2: solutions top-level, expectedOutputs nested in inputs (modified V2)
-      
+
       const inputsList = data.inputs
 
       // Import inputs and nested expectedOutputs (V2)
@@ -138,9 +138,12 @@ export const ExportImportPanel: Component = () => {
         )
 
         // Handle V2 nested expectedOutputs
-        if ('expectedOutputs' in input && Array.isArray(input.expectedOutputs)) {
+        if (
+          'expectedOutputs' in input &&
+          Array.isArray(input.expectedOutputs)
+        ) {
           for (const expected of input.expectedOutputs) {
-             storeInstance.commit(
+            storeInstance.commit(
               events.expectedOutputSet({
                 id: expected.id,
                 inputId: input.id,
@@ -179,7 +182,11 @@ export const ExportImportPanel: Component = () => {
       }
 
       // Handle V1 top-level expectedOutputs
-      if (data.version === 1 && 'expectedOutputs' in data && Array.isArray(data.expectedOutputs)) {
+      if (
+        data.version === 1 &&
+        'expectedOutputs' in data &&
+        Array.isArray(data.expectedOutputs)
+      ) {
         for (const expected of data.expectedOutputs) {
           storeInstance.commit(
             events.expectedOutputSet({
@@ -260,9 +267,13 @@ export const ExportImportPanel: Component = () => {
             }),
           )
 
-          if (data.version === 2 && 'expectedOutputs' in input && Array.isArray(input.expectedOutputs)) {
+          if (
+            data.version === 2 &&
+            'expectedOutputs' in input &&
+            Array.isArray(input.expectedOutputs)
+          ) {
             for (const expected of input.expectedOutputs) {
-               storeInstance.commit(
+              storeInstance.commit(
                 events.expectedOutputSet({
                   id: expected.id,
                   inputId: input.id,
@@ -277,7 +288,7 @@ export const ExportImportPanel: Component = () => {
 
         // Import top-level solutions (V1 & V2)
         if (Array.isArray(data.solutions)) {
-           for (const solution of data.solutions) {
+          for (const solution of data.solutions) {
             storeInstance.commit(
               events.solutionCreated({
                 id: solution.id,
@@ -300,7 +311,11 @@ export const ExportImportPanel: Component = () => {
           }
         }
 
-        if (data.version === 1 && 'expectedOutputs' in data && Array.isArray(data.expectedOutputs)) {
+        if (
+          data.version === 1 &&
+          'expectedOutputs' in data &&
+          Array.isArray(data.expectedOutputs)
+        ) {
           for (const expected of data.expectedOutputs) {
             storeInstance.commit(
               events.expectedOutputSet({

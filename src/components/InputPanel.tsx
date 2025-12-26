@@ -7,11 +7,6 @@ import {
   onCleanup,
   Show,
 } from 'solid-js'
-import {
-  CollapsibleSection,
-  isCollapsed,
-  toggleCollapsed,
-} from './CollapsibleSection.tsx'
 import { useTestContext } from '../contexts/TestContext.tsx'
 import {
   currentDayInputs$,
@@ -24,6 +19,11 @@ import { events } from '../livestore/schema.ts'
 import { store } from '../livestore/store.ts'
 import { DEFAULT_SOLUTION } from '../utils/constants.ts'
 import { debounce } from '../utils/debounce.ts'
+import {
+  CollapsibleSection,
+  isCollapsed,
+  toggleCollapsed,
+} from './CollapsibleSection.tsx'
 
 const AUTOSAVE_DELAY = 500 // ms
 
@@ -60,8 +60,9 @@ export const InputPanel: Component = () => {
   const [isDirty, setIsDirty] = createSignal(false)
   const [isExpectedOutputDirty, setIsExpectedOutputDirty] = createSignal(false)
 
-  const [collapsed, setCollapsed] = createSignal(isCollapsed('inputPanel', false))
-
+  const [collapsed, setCollapsed] = createSignal(
+    isCollapsed('inputPanel', false),
+  )
 
   // Sync local input with stored input when selection changes
   createEffect(() => {
@@ -326,89 +327,89 @@ export const InputPanel: Component = () => {
       onToggle={() => setCollapsed(toggleCollapsed('inputPanel', false))}
     >
       <div class="panel">
-
-      <div class="input-tabs">
-        <For each={currentDayInputs()}>
-          {(input) => (
-            <div
-              class={`input-tab ${uiState().selectedInputName === input.name ? 'active' : ''} ${getStatusClass(input.name)}`}
-            >
-              <button
-                type="button"
-                class="tab-btn"
-                title={(() => {
-                  const status = getStatusForInput(input.name)
-                  if (status === 'pass')
-                    return '✅ Pass: Output matches expected'
-                  if (status === 'fail')
-                    return '❌ Fail: Output does not match expected'
-                  if (status === 'running')
-                    return '⏳ Running: Test in progress'
-                  if (status === 'error') return '⚠️ Error: SQL or runtime error'
-                  return 'No test result yet'
-                })()}
-                onClick={() => selectInput(input.name)}
+        <div class="input-tabs">
+          <For each={currentDayInputs()}>
+            {(input) => (
+              <div
+                class={`input-tab ${uiState().selectedInputName === input.name ? 'active' : ''} ${getStatusClass(input.name)}`}
               >
-                {getStatusIcon(input.name)} {input.name}
-              </button>
-              <Show when={input.name !== 'main'}>
                 <button
                   type="button"
-                  class="delete-btn"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    deleteInput(input.name)
-                  }}
+                  class="tab-btn"
+                  title={(() => {
+                    const status = getStatusForInput(input.name)
+                    if (status === 'pass')
+                      return '✅ Pass: Output matches expected'
+                    if (status === 'fail')
+                      return '❌ Fail: Output does not match expected'
+                    if (status === 'running')
+                      return '⏳ Running: Test in progress'
+                    if (status === 'error')
+                      return '⚠️ Error: SQL or runtime error'
+                    return 'No test result yet'
+                  })()}
+                  onClick={() => selectInput(input.name)}
                 >
-                  ×
+                  {getStatusIcon(input.name)} {input.name}
                 </button>
-              </Show>
+                <Show when={input.name !== 'main'}>
+                  <button
+                    type="button"
+                    class="delete-btn"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deleteInput(input.name)
+                    }}
+                  >
+                    ×
+                  </button>
+                </Show>
+              </div>
+            )}
+          </For>
+          <Show
+            when={
+              !currentDayInputs()?.some(
+                (i) => i.name === uiState().selectedInputName,
+              )
+            }
+          >
+            <div class="input-tab active">
+              <button type="button" class="tab-btn">
+                {uiState().selectedInputName}
+              </button>
             </div>
-          )}
-        </For>
-        <Show
-          when={
-            !currentDayInputs()?.some(
-              (i) => i.name === uiState().selectedInputName,
-            )
+          </Show>
+          <button type="button" class="add-input-btn" onClick={addNewInput}>
+            +
+          </button>
+        </div>
+
+        <textarea
+          value={localInput()}
+          onInput={(e) => handleInput(e.currentTarget.value)}
+          placeholder={
+            uiState().selectedInputName === 'main'
+              ? 'Paste your puzzle input here...'
+              : 'Paste test input here...'
           }
-        >
-          <div class="input-tab active">
-            <button type="button" class="tab-btn">
-              {uiState().selectedInputName}
-            </button>
+        />
+        <div class="save-status">{isDirty() ? 'Saving...' : 'Saved'}</div>
+
+        <Show when={uiState().selectedInputName !== 'main'}>
+          <div class="expected-output-section">
+            <h3>Expected Output (Part {uiState().selectedPart})</h3>
+            <input
+              type="text"
+              value={localExpectedOutput()}
+              onInput={(e) => handleExpectedOutput(e.currentTarget.value)}
+              placeholder="Enter expected output for this test..."
+            />
+            <div class="save-status">
+              {isExpectedOutputDirty() ? 'Saving...' : 'Saved'}
+            </div>
           </div>
         </Show>
-        <button type="button" class="add-input-btn" onClick={addNewInput}>
-          +
-        </button>
-      </div>
-
-      <textarea
-        value={localInput()}
-        onInput={(e) => handleInput(e.currentTarget.value)}
-        placeholder={
-          uiState().selectedInputName === 'main'
-            ? 'Paste your puzzle input here...'
-            : 'Paste test input here...'
-        }
-      />
-      <div class="save-status">{isDirty() ? 'Saving...' : 'Saved'}</div>
-
-      <Show when={uiState().selectedInputName !== 'main'}>
-        <div class="expected-output-section">
-          <h3>Expected Output (Part {uiState().selectedPart})</h3>
-          <input
-            type="text"
-            value={localExpectedOutput()}
-            onInput={(e) => handleExpectedOutput(e.currentTarget.value)}
-            placeholder="Enter expected output for this test..."
-          />
-          <div class="save-status">
-            {isExpectedOutputDirty() ? 'Saving...' : 'Saved'}
-          </div>
-        </div>
-      </Show>
       </div>
     </CollapsibleSection>
   )
