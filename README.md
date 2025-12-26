@@ -56,7 +56,7 @@ bun run preview
 - [x] make the text boxes shrinkable to a min height of 1.5 text lines
   - [ ] looks a bit shit. The gap at the bottom below the text is somehow shorter than the gap at the top.
   - [x] if you click to add a test input, it deletes the main input, and the only way to get the main input back is to delete all test inputs - add a playwright test for this and fix the bug
-- [ ] main should not be highlighted like the rest of the tabs, because we don't automatically run it and can't check the answer
+- [x] main should not be highlighted like the rest of the tabs, because we don't automatically run it and can't check the answer
 - [ ] whenever I switch day, from part 1 to part 2, or between the different test inputs, clear the "RESULT" section until I next click Run again.
 - [ ] reset to part 1 when changing to a new day that you've not seen before
 - [ ] AoC doesn't want us to share our inputs. Don't include the main input when exporting to gist. - add a test for this and fix the bug
