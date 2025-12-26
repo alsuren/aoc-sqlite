@@ -66,6 +66,8 @@ bun run preview
 - [ ] hard forbid !important in css in biome, and fix the warnings about it.
 - [ ] ignore playwright-report dir and remove all contained files from git
 - [ ] transpose the solutions/expected outputs in the export json, so that we have a single "inputs" array, with the two outputs nested inside each object in the inputs array.
+- [ ] reset to part 1 when changing to a new day that you've not seen before
+- [ ] it is possible to get stuck in "Running...". Make it possible to cancel the job.
 
 
 ## Future Plans
