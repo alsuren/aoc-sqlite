@@ -61,7 +61,7 @@ bun run preview
 - [x] reset to part 1 when changing to a new day that you've not seen before
 - [x] AoC doesn't want us to share our inputs. Don't include the main input when exporting to gist. - add a test for this and fix the bug
 - [x] add a chevron to each block title, to expand/collapse the section. Save this state across refreshes, and default the export/saved inputs to closed. 
-- [ ] when adding or editing an input, automatically rerun the solution against that input (debounced) and update the tab title
+- [x] when adding or editing an input, automatically rerun the solution against that input (debounced) and update the tab title
 - [ ] transpose the solutions/expected outputs in the export json, so that we have a single "inputs" array, with the two outputs nested inside each object in the inputs array.
 - [ ] save the output from each (day, solution part, test input) so that we can quickly re-color the tabs when we browse around the app (make sure the cache is invalidated if input or solution code changes)
 - [ ] it is possible to get stuck in "Running...". Make it possible to cancel the job.
