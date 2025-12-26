@@ -56,7 +56,7 @@ export function buildGistFiles(
   const filteredData = { ...data, inputs: filteredInputs }
 
   const files: Record<string, { content: string }> = {
-    'aoc-livestore-export.json': {
+    'aoc-sqlite-export.json': {
       content: JSON.stringify(filteredData, null, 2),
     },
   }
@@ -160,9 +160,9 @@ export async function fetchGist(gistId: string, token?: string): Promise<Gist> {
  * Parse export data from a Gist
  */
 export function parseGistData(gist: Gist): ExportData {
-  const file = gist.files['aoc-livestore-export.json']
+  const file = gist.files['aoc-sqlite-export.json']
   if (!file) {
-    throw new Error('Gist does not contain aoc-livestore-export.json')
+    throw new Error('Gist does not contain aoc-sqlite-export.json')
   }
 
   const data = JSON.parse(file.content) as ExportData
@@ -203,5 +203,5 @@ export async function listUserGists(token: string): Promise<Gist[]> {
 
   const gists = (await response.json()) as Gist[]
   // Filter to only show AoC exports
-  return gists.filter((g) => g.files['aoc-livestore-export.json'])
+  return gists.filter((g) => g.files['aoc-sqlite-export.json'])
 }

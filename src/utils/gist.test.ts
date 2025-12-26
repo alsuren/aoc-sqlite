@@ -27,7 +27,7 @@ describe('buildGistFiles', () => {
     }
     const files = buildGistFiles(data)
     const json = JSON.parse(
-      files['aoc-livestore-export.json'].content,
+      files['aoc-sqlite-export.json'].content,
     ) as typeof data
     const inputNames = json.inputs.map((i) => i.name)
     expect(inputNames).not.toContain('main')

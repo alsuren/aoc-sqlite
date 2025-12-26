@@ -17,8 +17,8 @@ import {
 } from '../utils/gist.ts'
 
 // Store GitHub token in localStorage (not in LiveStore since it's sensitive)
-const TOKEN_KEY = 'aoc-livestore-github-token'
-const LAST_GIST_KEY = 'aoc-livestore-last-gist'
+const TOKEN_KEY = 'aoc-sqlite-github-token'
+const LAST_GIST_KEY = 'aoc-sqlite-last-gist'
 
 export const ExportImportPanel: Component = () => {
   const inputs = query(inputs$, [])
@@ -419,7 +419,7 @@ export const ExportImportPanel: Component = () => {
             <p class="token-help">
               Create a token at{' '}
               <a
-                href="https://github.com/settings/tokens/new?scopes=gist&description=AoC%20LiveStore"
+                href="https://github.com/settings/tokens/new?scopes=gist&description=AoC%20SQLite"
                 target="_blank"
                 rel="noopener noreferrer"
               >

@@ -1,5 +1,5 @@
 {
-  "name": "aoc-livestore",
+  "name": "aoc-sqlite",
   "version": "0.0.1",
   "description": "Advent of Code solution tracker with LiveStore + SolidJS",
   "type": "module",

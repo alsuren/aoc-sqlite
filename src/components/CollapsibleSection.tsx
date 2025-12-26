@@ -1,7 +1,7 @@
 import { type JSX, type ParentComponent, Show } from 'solid-js'
 
 // Store collapsed state in localStorage
-const COLLAPSED_KEY = 'aoc-livestore-collapsed'
+const COLLAPSED_KEY = 'aoc-sqlite-collapsed'
 
 function getCollapsedState(): Record<string, boolean> {
   try {
