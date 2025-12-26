@@ -50,24 +50,24 @@ bun run preview
 
 ## Bugs to fix
 
+- [ ] ignore playwright-report dir and remove all contained files from git
+- [ ] hard forbid !important in css in biome, and fix the warnings about it.
+- [ ] The name aoc-livestore was a temporary measure. Find all public references to aoc-livestore and replace it with aoc-sqlite (e.g. the filename `aoc-livestore-export.json` and the suggested github token name)
 - [x] make the text boxes shrinkable to a min height of 1.5 text lines
   - [ ] looks a bit shit. The gap at the bottom below the text is somehow shorter than the gap at the top.
   - [x] if you click to add a test input, it deletes the main input, and the only way to get the main input back is to delete all test inputs - add a playwright test for this and fix the bug
-- [ ] when adding or editing an input, automatically rerun the solution against that input (debounced) and update the tab title
-- [x] tabs should not flash after rerunning tests
-  - [x] add a tooltip explaining what the color of the input tabs means
-- [ ] The name aoc-livestore was a temporary measure. Find all public references to aoc-livestore and replace it with aoc-sqlite (e.g. the filename `aoc-livestore-export.json` and the suggested github token name)
 - [ ] main should not be highlighted like the rest of the tabs, because we don't automatically run it and can't check the answer
 - [ ] whenever I switch day, from part 1 to part 2, or between the different test inputs, clear the "RESULT" section until I next click Run again.
-- [ ] save the output from each (day, solution part, test input) so that we can quickly re-color the tabs when we browse around the app (make sure the cache is invalidated if input or solution code changes)
-- [ ] add a chevron to each block title, to expand/collapse the section. Save this state across refreshes, and default the export/saved inputs to closed. 
-- [x] put some default text in the solution pane. Something like `insert into output (progress, result)\nselect 1, 42`. Only include the text in the state/gist if it differs from the default.
-- [ ] AoC doesn't want us to share our inputs. Don't include the main input when exporting to gist. - add a test for this and fix the bug
-- [ ] hard forbid !important in css in biome, and fix the warnings about it.
-- [ ] ignore playwright-report dir and remove all contained files from git
-- [ ] transpose the solutions/expected outputs in the export json, so that we have a single "inputs" array, with the two outputs nested inside each object in the inputs array.
 - [ ] reset to part 1 when changing to a new day that you've not seen before
+- [ ] AoC doesn't want us to share our inputs. Don't include the main input when exporting to gist. - add a test for this and fix the bug
+- [ ] add a chevron to each block title, to expand/collapse the section. Save this state across refreshes, and default the export/saved inputs to closed. 
+- [ ] when adding or editing an input, automatically rerun the solution against that input (debounced) and update the tab title
+- [ ] transpose the solutions/expected outputs in the export json, so that we have a single "inputs" array, with the two outputs nested inside each object in the inputs array.
+- [ ] save the output from each (day, solution part, test input) so that we can quickly re-color the tabs when we browse around the app (make sure the cache is invalidated if input or solution code changes)
 - [ ] it is possible to get stuck in "Running...". Make it possible to cancel the job.
+- [x] tabs should not flash after rerunning tests
+  - [x] add a tooltip explaining what the color of the input tabs means
+- [x] put some default text in the solution pane. Something like `insert into output (progress, result)\nselect 1, 42`. Only include the text in the state/gist if it differs from the default.
 
 
 ## Future Plans
