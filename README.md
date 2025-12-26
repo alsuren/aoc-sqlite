@@ -68,6 +68,7 @@ bun run preview
 - [x] tabs should not flash after rerunning tests
   - [x] add a tooltip explaining what the color of the input tabs means
 - [x] put some default text in the solution pane. Something like `insert into output (progress, result)\nselect 1, 42`. Only include the text in the state/gist if it differs from the default.
+- [ ] fix cleanup so that the sqlite.close() in the finally block doesn't explode
 
 
 ## Future Plans

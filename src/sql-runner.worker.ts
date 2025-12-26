@@ -123,7 +123,15 @@ async function executeSQL(
     }
   } finally {
     // Always close the database
-    await sqlite3.close(db)
+    try {
+      await sqlite3.close(db)
+    } catch (error) {
+      console.error(
+        'FIXME: clean up sqlite properly in this error case:',
+        // Error: unable to close due to unfinalized statements or unfinished backups
+        error,
+      )
+    }
   }
 }
 
