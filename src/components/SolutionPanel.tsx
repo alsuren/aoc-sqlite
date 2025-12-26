@@ -8,6 +8,12 @@ import {
   Show,
 } from 'solid-js'
 
+import {
+  CollapsibleSection,
+  isCollapsed,
+  toggleCollapsed,
+} from './CollapsibleSection.tsx'
+
 import { useTestContext } from '../contexts/TestContext.tsx'
 import {
   currentDayExpectedOutputs$,
@@ -44,6 +50,10 @@ export const SolutionPanel: Component = () => {
   const [isDirty, setIsDirty] = createSignal(false)
   const [isRunning, setIsRunning] = createSignal(false)
   const [runResult, setRunResult] = createSignal<SQLResult | null>(null)
+  
+  const [collapsed, setCollapsed] = createSignal(
+    isCollapsed('solutionPanel', false),
+  )
 
   // Get solution for current part
   const currentSolution = () => {
@@ -222,8 +232,13 @@ export const SolutionPanel: Component = () => {
   }
 
   return (
-    <div class="panel">
-      <h2>💻 Solution - Day {uiState().selectedDay}</h2>
+    <CollapsibleSection
+      id="solutionPanel"
+      title={`💻 Solution - Day ${uiState().selectedDay}`}
+      collapsed={collapsed()}
+      onToggle={() => setCollapsed(toggleCollapsed('solutionPanel', false))}
+    >
+      <div class="panel">
       <div class="part-tabs">
         <button
           type="button"
@@ -309,6 +324,7 @@ export const SolutionPanel: Component = () => {
           <span class="warning"> (no input data)</span>
         </Show>
       </div>
-    </div>
+      </div>
+    </CollapsibleSection>
   )
 }

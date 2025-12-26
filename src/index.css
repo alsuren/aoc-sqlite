@@ -766,7 +766,8 @@ h1 {
 
 /* Adjust nested panels in collapsible sections */
 .collapsible-content .export-import-panel,
-.collapsible-content .input-list {
+.collapsible-content .input-list,
+.collapsible-content .panel {
   margin-top: 0;
   background: transparent;
   border: none;

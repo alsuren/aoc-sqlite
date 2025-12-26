@@ -7,6 +7,11 @@ import {
   onCleanup,
   Show,
 } from 'solid-js'
+import {
+  CollapsibleSection,
+  isCollapsed,
+  toggleCollapsed,
+} from './CollapsibleSection.tsx'
 import { useTestContext } from '../contexts/TestContext.tsx'
 import {
   currentDayInputs$,
@@ -54,6 +59,9 @@ export const InputPanel: Component = () => {
   const [localExpectedOutput, setLocalExpectedOutput] = createSignal('')
   const [isDirty, setIsDirty] = createSignal(false)
   const [isExpectedOutputDirty, setIsExpectedOutputDirty] = createSignal(false)
+
+  const [collapsed, setCollapsed] = createSignal(isCollapsed('inputPanel', false))
+
 
   // Sync local input with stored input when selection changes
   createEffect(() => {
@@ -292,13 +300,20 @@ export const InputPanel: Component = () => {
   }
 
   return (
-    <div class="panel">
-      <h2>
-        📥 Puzzle Input - Day {uiState().selectedDay}
-        <Show when={isTestsRunning()}>
-          <span class="testing-indicator">⏳ Testing...</span>
-        </Show>
-      </h2>
+    <CollapsibleSection
+      id="inputPanel"
+      title={
+        <>
+          📥 Puzzle Input - Day {uiState().selectedDay}
+          <Show when={isTestsRunning()}>
+            <span class="testing-indicator">⏳ Testing...</span>
+          </Show>
+        </>
+      }
+      collapsed={collapsed()}
+      onToggle={() => setCollapsed(toggleCollapsed('inputPanel', false))}
+    >
+      <div class="panel">
 
       <div class="input-tabs">
         <For each={currentDayInputs()}>
@@ -382,6 +397,7 @@ export const InputPanel: Component = () => {
           </div>
         </div>
       </Show>
-    </div>
+      </div>
+    </CollapsibleSection>
   )
 }
