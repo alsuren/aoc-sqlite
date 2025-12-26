@@ -56,8 +56,10 @@ bun run preview
 - [ ] when adding or editing an input, automatically rerun the solution against that input (debounced) and update the tab title
 - [x] tabs should not flash after rerunning tests
   - [x] add a tooltip explaining what the color of the input tabs means
-- [ ] main should not be highlighted like the rest of the tabs
-- [ ] save the success or otherwise of each input
+- [ ] The name aoc-livestore was a temporary measure. Find all public references to aoc-livestore and replace it with aoc-sqlite (e.g. the filename `aoc-livestore-export.json` and the suggested github token name)
+- [ ] main should not be highlighted like the rest of the tabs, because we don't automatically run it and can't check the answer
+- [ ] whenever I switch day, from part 1 to part 2, or between the different test inputs, clear the "RESULT" section until I next click Run again.
+- [ ] save the output from each (day, solution part, test input) so that we can quickly re-color the tabs when we browse around the app (make sure the cache is invalidated if input or solution code changes)
 - [ ] add a chevron to each block title, to expand/collapse the section. Save this state across refreshes, and default the export/saved inputs to closed. 
 - [x] put some default text in the solution pane. Something like `insert into output (progress, result)\nselect 1, 42`. Only include the text in the state/gist if it differs from the default.
 - [ ] AoC doesn't want us to share our inputs. Don't include the main input when exporting to gist. - add a test for this and fix the bug
