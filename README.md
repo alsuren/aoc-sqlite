@@ -52,7 +52,7 @@ bun run preview
 
 - [x] ignore playwright-report dir and remove all contained files from git
 - [x] hard forbid !important in css in biome, and fix the warnings about it.
-- [ ] The name aoc-livestore was a temporary measure. Find all public references to aoc-livestore and replace it with aoc-sqlite (e.g. the filename `aoc-livestore-export.json` and the suggested github token name)
+- [x] The name aoc-livestore was a temporary measure. Find all public references to aoc-livestore and replace it with aoc-sqlite (e.g. the filename `aoc-livestore-export.json` and the suggested github token name)
 - [x] make the text boxes shrinkable to a min height of 1.5 text lines
   - [ ] looks a bit shit. The gap at the bottom below the text is somehow shorter than the gap at the top.
   - [x] if you click to add a test input, it deletes the main input, and the only way to get the main input back is to delete all test inputs - add a playwright test for this and fix the bug
