@@ -276,6 +276,8 @@ export const InputPanel: Component = () => {
   // Get CSS class for test status, suppressing flash
   const lastStableStatus = new Map<string, string>()
   const getStatusClass = (inputName: string) => {
+    // Don't show status highlighting for main input - we don't run tests on it
+    if (inputName === 'main') return ''
     const status = getStatusForInput(inputName)
     if (!status) return ''
     if (status === 'pass' || status === 'fail' || status === 'error') {
