@@ -771,9 +771,3 @@ h1 {
   border: none;
   border-radius: 0;
 }
-
-.input-tabs-tooltip-container:focus .input-tabs-tooltip,
-.input-tabs-tooltip-container:hover .input-tabs-tooltip {
-  visibility: visible !important;
-  opacity: 1 !important;
-}
