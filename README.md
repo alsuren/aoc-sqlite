@@ -63,6 +63,8 @@ bun run preview
 - [ ] add a chevron to each block title, to expand/collapse the section. Save this state across refreshes, and default the export/saved inputs to closed. 
 - [x] put some default text in the solution pane. Something like `insert into output (progress, result)\nselect 1, 42`. Only include the text in the state/gist if it differs from the default.
 - [ ] AoC doesn't want us to share our inputs. Don't include the main input when exporting to gist. - add a test for this and fix the bug
+- [ ] hard forbid !important in css in biome, and fix the warnings about it.
+- [ ] transpose the solutions/expected outputs in the export json, so that we have a single "inputs" array, with the two outputs nested inside each object in the inputs array.
 
 
 ## Future Plans
