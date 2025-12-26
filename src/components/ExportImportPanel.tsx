@@ -13,6 +13,7 @@ import {
   type Gist,
   listUserGists,
   parseGistData,
+  prepareExportData,
   updateGist,
 } from '../utils/gist.ts'
 
@@ -50,41 +51,12 @@ export const ExportImportPanel: Component = () => {
   }
 
   const buildExportData = (): ExportData => {
-    const allInputs = inputs() || []
-    const allSolutions = solutions() || []
-    const allExpectedOutputs = expectedOutputs() || []
-
-    // Filter out solutions that are just the default template
-    const filteredSolutions = allSolutions.filter(
-      (s) => s.code !== DEFAULT_SOLUTION,
+    return prepareExportData(
+      inputs() || [],
+      solutions() || [],
+      expectedOutputs() || [],
+      DEFAULT_SOLUTION,
     )
-
-    return {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      inputs: allInputs.map((i) => ({
-        id: i.id,
-        year: i.year,
-        day: i.day,
-        name: i.name,
-        input: i.input,
-      })),
-      solutions: filteredSolutions.map((s) => ({
-        id: s.id,
-        year: s.year,
-        day: s.day,
-        part: s.part,
-        code: s.code,
-        language: s.language,
-        result: s.result ?? undefined,
-      })),
-      expectedOutputs: allExpectedOutputs.map((e) => ({
-        id: e.id,
-        inputId: e.inputId,
-        part: e.part,
-        expectedOutput: e.expectedOutput,
-      })),
-    }
   }
 
   const handleExport = async (update = false) => {
@@ -146,8 +118,14 @@ export const ExportImportPanel: Component = () => {
 
       const now = new Date()
 
-      // Import inputs
-      for (const input of data.inputs) {
+      // Import from data (handles V1 and V2)
+      // V1: solutions top-level, expectedOutputs top-level
+      // V2: solutions top-level, expectedOutputs nested in inputs (modified V2)
+      
+      const inputsList = data.inputs
+
+      // Import inputs and nested expectedOutputs (V2)
+      for (const input of inputsList) {
         storeInstance.commit(
           events.inputCreated({
             id: input.id,
@@ -158,47 +136,66 @@ export const ExportImportPanel: Component = () => {
             createdAt: now,
           }),
         )
+
+        // Handle V2 nested expectedOutputs
+        if ('expectedOutputs' in input && Array.isArray(input.expectedOutputs)) {
+          for (const expected of input.expectedOutputs) {
+             storeInstance.commit(
+              events.expectedOutputSet({
+                id: expected.id,
+                inputId: input.id,
+                part: expected.part as 1 | 2,
+                expectedOutput: expected.expectedOutput,
+                updatedAt: now,
+              }),
+            )
+          }
+        }
       }
 
-      // Import solutions
-      for (const solution of data.solutions) {
-        storeInstance.commit(
-          events.solutionCreated({
-            id: solution.id,
-            year: solution.year,
-            day: solution.day,
-            part: solution.part as 1 | 2,
-            code: solution.code,
-            language: solution.language,
-            createdAt: now,
-          }),
-        )
-        if (solution.result) {
+      // Import solutions (Top level for both V1 and V2)
+      if (Array.isArray(data.solutions)) {
+        for (const solution of data.solutions) {
           storeInstance.commit(
-            events.solutionResultSet({
+            events.solutionCreated({
               id: solution.id,
-              result: solution.result,
+              year: solution.year,
+              day: solution.day,
+              part: solution.part as 1 | 2,
+              code: solution.code,
+              language: solution.language,
+              createdAt: now,
+            }),
+          )
+          if (solution.result) {
+            storeInstance.commit(
+              events.solutionResultSet({
+                id: solution.id,
+                result: solution.result,
+              }),
+            )
+          }
+        }
+      }
+
+      // Handle V1 top-level expectedOutputs
+      if (data.version === 1 && 'expectedOutputs' in data && Array.isArray(data.expectedOutputs)) {
+        for (const expected of data.expectedOutputs) {
+          storeInstance.commit(
+            events.expectedOutputSet({
+              id: expected.id,
+              inputId: expected.inputId,
+              part: expected.part as 1 | 2,
+              expectedOutput: expected.expectedOutput,
+              updatedAt: now,
             }),
           )
         }
       }
 
-      // Import expected outputs
-      for (const expected of data.expectedOutputs) {
-        storeInstance.commit(
-          events.expectedOutputSet({
-            id: expected.id,
-            inputId: expected.inputId,
-            part: expected.part as 1 | 2,
-            expectedOutput: expected.expectedOutput,
-            updatedAt: now,
-          }),
-        )
-      }
-
       setMessage({
         type: 'success',
-        text: `Imported ${data.inputs.length} inputs, ${data.solutions.length} solutions`,
+        text: `Imported ${data.inputs.length} inputs`,
       })
       setImportUrl('')
     } catch (error) {
@@ -238,8 +235,8 @@ export const ExportImportPanel: Component = () => {
     const reader = new FileReader()
     reader.onload = async (e) => {
       try {
-        const data = JSON.parse(e.target?.result as string) as ExportData
-        if (data.version !== 1) {
+        const data = JSON.parse(e.target?.result as string)
+        if (data.version !== 1 && data.version !== 2) {
           throw new Error(`Unsupported export version: ${data.version}`)
         }
 
@@ -250,6 +247,7 @@ export const ExportImportPanel: Component = () => {
 
         const now = new Date()
 
+        // Import inputs and nested expectedOutputs (V2)
         for (const input of data.inputs) {
           storeInstance.commit(
             events.inputCreated({
@@ -261,32 +259,59 @@ export const ExportImportPanel: Component = () => {
               createdAt: now,
             }),
           )
+
+          if (data.version === 2 && 'expectedOutputs' in input && Array.isArray(input.expectedOutputs)) {
+            for (const expected of input.expectedOutputs) {
+               storeInstance.commit(
+                events.expectedOutputSet({
+                  id: expected.id,
+                  inputId: input.id,
+                  part: expected.part as 1 | 2,
+                  expectedOutput: expected.expectedOutput,
+                  updatedAt: now,
+                }),
+              )
+            }
+          }
         }
 
-        for (const solution of data.solutions) {
-          storeInstance.commit(
-            events.solutionCreated({
-              id: solution.id,
-              year: solution.year,
-              day: solution.day,
-              part: solution.part as 1 | 2,
-              code: solution.code,
-              language: solution.language,
-              createdAt: now,
-            }),
-          )
+        // Import top-level solutions (V1 & V2)
+        if (Array.isArray(data.solutions)) {
+           for (const solution of data.solutions) {
+            storeInstance.commit(
+              events.solutionCreated({
+                id: solution.id,
+                year: solution.year,
+                day: solution.day,
+                part: solution.part as 1 | 2,
+                code: solution.code,
+                language: solution.language,
+                createdAt: now,
+              }),
+            )
+            if (solution.result) {
+              storeInstance.commit(
+                events.solutionResultSet({
+                  id: solution.id,
+                  result: solution.result,
+                }),
+              )
+            }
+          }
         }
 
-        for (const expected of data.expectedOutputs) {
-          storeInstance.commit(
-            events.expectedOutputSet({
-              id: expected.id,
-              inputId: expected.inputId,
-              part: expected.part as 1 | 2,
-              expectedOutput: expected.expectedOutput,
-              updatedAt: now,
-            }),
-          )
+        if (data.version === 1 && 'expectedOutputs' in data && Array.isArray(data.expectedOutputs)) {
+          for (const expected of data.expectedOutputs) {
+            storeInstance.commit(
+              events.expectedOutputSet({
+                id: expected.id,
+                inputId: expected.inputId,
+                part: expected.part as 1 | 2,
+                expectedOutput: expected.expectedOutput,
+                updatedAt: now,
+              }),
+            )
+          }
         }
 
         setMessage({

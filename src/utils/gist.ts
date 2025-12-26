@@ -17,7 +17,7 @@ export interface Gist {
   updated_at: string
 }
 
-export interface ExportData {
+export interface ExportDataV1 {
   version: 1
   exportedAt: string
   inputs: Array<{
@@ -42,6 +42,110 @@ export interface ExportData {
     part: number
     expectedOutput: string
   }>
+}
+
+export interface StoreInput {
+  id: string
+  year: number
+  day: number
+  name: string
+  input: string
+}
+
+export interface StoreSolution {
+  id: string
+  year: number
+  day: number
+  part: number
+  code: string
+  language: string
+  result: string | null
+}
+
+export interface StoreExpectedOutput {
+  id: string
+  inputId: string
+  part: number
+  expectedOutput: string
+}
+
+export interface ExportDataV2 {
+  version: 2
+  exportedAt: string
+  inputs: Array<{
+    id: string
+    year: number
+    day: number
+    name: string
+    input: string
+    expectedOutputs: Array<{
+      id: string
+      part: number
+      expectedOutput: string
+    }>
+  }>
+  solutions: Array<{
+    id: string
+    year: number
+    day: number
+    part: number
+    code: string
+    language: string
+    result?: string
+  }>
+}
+
+export type ExportData = ExportDataV2
+
+/**
+ * Prepare export data from store state
+ */
+export function prepareExportData(
+  inputs: readonly StoreInput[],
+  solutions: readonly StoreSolution[],
+  expectedOutputs: readonly StoreExpectedOutput[],
+  defaultSolutionCode: string = '',
+): ExportData {
+  const filteredSolutions = solutions.filter(
+    (s) => s.code !== defaultSolutionCode,
+  )
+
+  const expectedOutputMap = new Map<string, StoreExpectedOutput[]>()
+  for (const out of expectedOutputs) {
+    const existing = expectedOutputMap.get(out.inputId) || []
+    existing.push(out)
+    expectedOutputMap.set(out.inputId, existing)
+  }
+
+  return {
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    inputs: inputs.map((i) => {
+      const expectedForInput = expectedOutputMap.get(i.id) || []
+
+      return {
+        id: i.id,
+        year: i.year,
+        day: i.day,
+        name: i.name,
+        input: i.input,
+        expectedOutputs: expectedForInput.map((e) => ({
+          id: e.id,
+          part: e.part,
+          expectedOutput: e.expectedOutput,
+        })),
+      }
+    }),
+    solutions: filteredSolutions.map((s) => ({
+      id: s.id,
+      year: s.year,
+      day: s.day,
+      part: s.part,
+      code: s.code,
+      language: s.language,
+      result: s.result ?? undefined,
+    })),
+  }
 }
 
 /**
@@ -159,18 +263,18 @@ export async function fetchGist(gistId: string, token?: string): Promise<Gist> {
 /**
  * Parse export data from a Gist
  */
-export function parseGistData(gist: Gist): ExportData {
+export function parseGistData(gist: Gist): ExportData | ExportDataV1 {
   const file = gist.files['aoc-sqlite-export.json']
   if (!file) {
     throw new Error('Gist does not contain aoc-sqlite-export.json')
   }
 
-  const data = JSON.parse(file.content) as ExportData
-  if (data.version !== 1) {
+  const data = JSON.parse(file.content)
+  if (data.version !== 1 && data.version !== 2) {
     throw new Error(`Unsupported export version: ${data.version}`)
   }
 
-  return data
+  return data as ExportData | ExportDataV1
 }
 
 /**
